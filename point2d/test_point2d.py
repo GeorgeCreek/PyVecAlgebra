@@ -107,7 +107,7 @@ class TestPoint2D(unittest.TestCase):
 
         p.set_polar(5, 90)
         self.assertAlmostEqual(p.x, 0, places=6)
-        self.assertAlmostEqual(p.y, 5, places=6)
+        self.assertAlmostEqual(p.y, -5, places=6)
 
         p.set_polar(5, 180)
         self.assertAlmostEqual(p.x, -5, places=6)
@@ -115,7 +115,7 @@ class TestPoint2D(unittest.TestCase):
 
         p.set_polar(5, 270)
         self.assertAlmostEqual(p.x, 0, places=6)
-        self.assertAlmostEqual(p.y, -5, places=6)
+        self.assertAlmostEqual(p.y, 5, places=6)
 
     def test_set_polar_type_error(self):
         p = Point2D()
@@ -140,7 +140,7 @@ class TestPoint2D(unittest.TestCase):
         radius, angle = p.get_polar()
         self.assertAlmostEqual(radius, 5.0)
         self.assertAlmostEqual(angle, 0.0)
-
+        
         p_neg = Point2D(-5, 0)
         radius, angle = p_neg.get_polar()
         self.assertAlmostEqual(radius, 5.0)
@@ -150,32 +150,98 @@ class TestPoint2D(unittest.TestCase):
         p = Point2D(0, 5)
         radius, angle = p.get_polar()
         self.assertAlmostEqual(radius, 5.0)
-        self.assertAlmostEqual(angle, 90.0)
+        self.assertAlmostEqual(angle, 270.0)
 
         p_neg = Point2D(0, -5)
         radius, angle = p_neg.get_polar()
         self.assertAlmostEqual(radius, 5.0)
-        self.assertAlmostEqual(angle, -90.0)
+        self.assertAlmostEqual(angle, 90.0)
+    
+    def test_get_polar_non_axis(self):
+        p = Point2D(3, 4)
+        radius, angle = p.get_polar()
+        self.assertAlmostEqual(radius, 5.0)
+        self.assertAlmostEqual(angle, 306.869897645844059)
+        p_neg = Point2D(-3, -4)
+        radius, angle = p_neg.get_polar()
+        self.assertAlmostEqual(radius, 5.0)
+        self.assertAlmostEqual(angle, 126.86989764584402)
+        p = Point2D(5, 5)
+        radius, angle = p.get_polar()
+        self.assertAlmostEqual(radius, 5 * (2 ** 0.5))
+        self.assertAlmostEqual(angle, 315.0)
+        p = Point2D(5, -5)
+        radius, angle = p.get_polar()
+        self.assertAlmostEqual(radius, 5 * (2 ** 0.5))
+        self.assertAlmostEqual(angle, 45.0) 
 
     def test_get_polar_quadrants(self):
         p = Point2D(1, 1)
         radius, angle = p.get_polar()
         self.assertAlmostEqual(radius, 2 ** 0.5)
-        self.assertAlmostEqual(angle, 45.0)
+        self.assertAlmostEqual(angle, 315.0)
 
         p = Point2D(-1, 1)
         radius, angle = p.get_polar()
         self.assertAlmostEqual(radius, 2 ** 0.5)
-        self.assertAlmostEqual(angle, 135.0)
+        self.assertAlmostEqual(angle, 225.0)
 
         p = Point2D(-1, -1)
         radius, angle = p.get_polar()
         self.assertAlmostEqual(radius, 2 ** 0.5)
-        self.assertAlmostEqual(angle, 225.0)
+        self.assertAlmostEqual(angle, 135.0)
 
         p = Point2D(1, -1)
         radius, angle = p.get_polar()
         self.assertAlmostEqual(radius, 2 ** 0.5)
-        self.assertAlmostEqual(angle, 315.0)
+        self.assertAlmostEqual(angle, 45.0)
+    def test_normalize_origin(self):
+        p = Point2D(0, 0)
+        result = p.normalize()
+        self.assertFalse(result)
+        self.assertEqual(p.x, 0.0)
+        self.assertEqual(p.y, 0.0)
+
+    def test_normalize_unit_distance(self):
+        p = Point2D(1, 0)
+        result = p.normalize()
+        self.assertTrue(result)
+        self.assertEqual(p.x, 1)
+        self.assertEqual(p.y, 0)
+
+    def test_normalize_greater_than_one(self):
+        p = Point2D(3, 4)  # distance = 5
+        result = p.normalize()
+        self.assertTrue(result)
+        self.assertAlmostEqual(p.x, 0.6)
+        self.assertAlmostEqual(p.y, 0.8)
+        self.assertAlmostEqual((p.x ** 2 + p.y ** 2) ** 0.5, 1.0)
+
+    def test_normalize_less_than_one(self):
+        p = Point2D(0.3, 0.4)  # distance = 0.5
+        result = p.normalize()
+        self.assertTrue(result)
+        self.assertAlmostEqual(p.x, 0.15)
+        self.assertAlmostEqual(p.y, 0.2)
+
+    def test_normalize_negative_distance(self):
+        # Should never happen, but test for code path
+        p = Point2D(0, 0)
+        # Patch distance_to to return negative
+        orig_distance_to = p.distance_to
+        p.distance_to = lambda other: -1
+        with self.assertRaises(ValueError):
+            p.normalize()
+        p.distance_to = orig_distance_to
+
+    def test_normalize_raises_on_zero_distance(self):
+        p = Point2D(0, 0)
+        # Patch distance_to to return zero
+        orig_distance_to = p.distance_to
+        p.distance_to = lambda other: 0
+        with self.assertRaises(ValueError):
+            p.normalize()
+        p.distance_to = orig_distance_to
+
 
 

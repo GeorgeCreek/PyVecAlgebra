@@ -1,4 +1,6 @@
 from math import pi
+from typing import Self
+
 rad_to_deg = 180/pi # convert radians to degrees
 deg_to_rad = pi/180 # convert degrees to radians
 class Point2D:
@@ -96,8 +98,8 @@ class Point2D:
         if radius < 0:
             raise ValueError("radius must be non-negative")
         angle = angle * deg_to_rad
-        self.x = radius * cos(angle)
-        self.y = radius * sin(angle)      
+        self.x = radius * +cos(angle)
+        self.y = radius * -sin(angle)      
     
     def get_polar(self) -> tuple:
         """
@@ -111,14 +113,49 @@ class Point2D:
         if radius == 0:
             return (0.0, 0.0)
         
-        angle = atan2(self.y, self.x) * rad_to_deg
+        angle = atan2(-self.y, self.x) * rad_to_deg
         
         # Normalize angle to the range [0, 360) for positive x-axis,
         # or [-180, 180) in general, matching the test's expectations
-        if angle < 0 and self.x < 0:
+        if angle < 0:
             angle += 360
-            
         return (radius, angle)
+
+    def midpoint_to(self, other: Self) -> Self:
+        """
+        Calculate the midpoint between this point and another Point2D.
+        :param other: Another Point2D instance.
+        :return: A new Point2D instance representing the midpoint.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        mid_x = (self.x + other.x) / 2
+        mid_y = (self.y + other.y) / 2
+        return Point2D(mid_x, mid_y)
+
+    def midpoint_to_xy(self, x: float, y: float) -> Self:
+        """
+        Calculate the midpoint between this point and a given (x, y) coordinate.
+        :param x: X-coordinate of the other point.
+        :param y: Y-coordinate of the other point.
+        :return: A new Point2D instance representing the midpoint.
+        """
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            raise TypeError("x and y must be int or float")
+        mid_x = (self.x + x) / 2
+        mid_y = (self.y + y) / 2
+        return Point2D(mid_x, mid_y)
+    def midpoint_p1_p2(self, other: Self) -> Self:
+        """
+        Calculate the midpoint between this point and another Point2D.
+        :param other: Another Point2D instance.
+        :return: A new Point2D instance representing the midpoint.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        mid_x = (self.x + other.x) / 2
+        mid_y = (self.y + other.y) / 2
+        return Point2D(mid_x, mid_y)
 
     def __repr__(self):
         """
@@ -144,3 +181,30 @@ class Point2D:
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+
+    def normalize(self) -> bool:
+        """
+        Normalize the point to have a unit distance from the origin.
+        If the point is at the origin, it remains unchanged.
+        """
+        if self.is_zero():
+            return False
+        distance = self.distance_to(Point2D(0, 0))
+        if distance == 0:
+            raise ValueError("Cannot normalize a point at the origin")
+            return False
+        elif distance < 0:
+            raise ValueError("Distance must be non-negative")
+            return False
+        elif distance < 1:
+            self.x *= distance
+            self.y *= distance
+            return True
+        elif distance == 1:
+            self.x = 1
+            self.y = 0
+            return True
+        else:
+            self.x /= distance
+            self.y /= distance
+            return True

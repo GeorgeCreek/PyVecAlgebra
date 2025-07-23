@@ -208,15 +208,58 @@ class Point2D:
             return self.x == other.x and self.y == other.y
         return False
 
-    def distance_to(self, other):
+    def __ne__(self, other):
         """
-        Calculate the Euclidean distance to another Point2D.
-        :param other: Another Point2D instance.
-        :return: Euclidean distance as a float.
+        Check if two Point2D instances are not equal.
+        :param other: Another Point2D instance to compare with.
+        """
+        if isinstance(other, Point2D):
+            return not self.__eq__(other)
+        return True
+
+    def __cmp__(self, other):
+        """
+        Compare two Point2D instances.
+        :param other: Another Point2D instance to compare with.
+        :return: -1 if self < other, 0 if self == other, 1 if self > other.
         """
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
-        return sqrt((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
+        if self.x < other.x or (self.x == other.x and self.y < other.y):
+            return -1
+        elif self.x == other.x and self.y == other.y:
+            return 0
+        else:
+            return 1
+    def __neg__(self):
+        """
+        Negate the point's coordinates.
+        :return: A new Point2D instance with negated coordinates.
+        """
+        return Point2D(-self.x, -self.y)
+
+    def __pos__(self):
+        """
+        Return a copy of the point with positive coordinates.
+        :return: A new Point2D instance with positive coordinates.
+        """
+        return Point2D(abs(self.x), abs(self.y))
+    
+    def positive(self) -> Self:
+        """
+        Return a new Point2D instance with positive coordinates.
+        :return: A new Point2D instance with positive coordinates.
+        """
+        return +self
+
+    def negate(self) -> Self:
+        """
+        Negate the point's coordinates.
+        :return: A new Point2D instance with negated coordinates.
+        """
+        return -self
+    
+
     def distance_to_squared(self, other):
         """
         Calculate the squared Euclidean distance to another Point2D.
@@ -226,6 +269,27 @@ class Point2D:
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
         return (self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y)
+    
+    def distance_to(self, other: Self) -> float:
+        """
+        Calculate the Euclidean distance to another Point2D.
+        :param other: Another Point2D instance.
+        :return: Euclidean distance as a float.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return sqrt(self.distance_to_squared(other))
+    
+    def distance_to_xy(self, x: float, y: float) -> float:
+        """
+        Calculate the Euclidean distance to a given (x, y) coordinate.
+        :param x: X-coordinate of the other point.
+        :param y: Y-coordinate of the other point.
+        :return: Euclidean distance as a float.
+        """
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            raise TypeError("x and y must be int or float")
+        return sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
 
     def normalize(self) -> bool:
         """
@@ -243,3 +307,345 @@ class Point2D:
             self.x /= sqrt(length)
             self.y /= sqrt(length)
             return True
+
+    def normalized(self) -> Self:
+        """
+        Return a new normalized instance of the point.
+        """
+        if self.is_zero():
+            return Point2D(0, 0)
+        length = self.distance_to_squared(Point2D(0, 0))
+        if length == 0:
+            return Point2D(0, 0)
+        elif length == 1:
+            return Point2D(self.x, self.y)
+        else:
+            return Point2D(self.x / sqrt(length), self.y / sqrt(length))
+
+    def dot_product(self, other: Self) -> float:
+        """
+        Calculate the dot product with another Point2D.
+        :param other: Another Point2D instance.
+        :return: Dot product as a float.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return self.x * other.x + self.y * other.y
+    
+    def cross_product(self, other: Self) -> float:
+        """
+        Calculate the cross product with another Point2D.
+        :param other: Another Point2D instance.
+        :return: Cross product as a float.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return self.x * other.y - self.y * other.x
+
+    def magnitude(self) -> float:
+        """
+        Calculate the magnitude (length) of the point vector.
+        :return: Magnitude as a float.
+        """
+        # return sqrt(self.x * self.x + self.y * self.y)
+        return sqrt(self.dot_product(self))
+    
+    def scale_factor(self, a: float | int, b: float | int) -> Self:
+        """
+        Scale the point by a factor of (a, b).
+        :param a: Scaling factor for x-coordinate.
+        :param b: Scaling factor for y-coordinate.
+        :return: A new Point2D instance representing the scaled point.
+        """
+        if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+            raise TypeError("Scaling factors must be int or float")
+        return Point2D(self.x * a, self.y * b)
+
+    def scale(self, scalar: float | int) -> Self:
+        """
+        Scale the point by a scalar value.
+        :param scalar: Scalar value to scale the point.
+        :return: A new Point2D instance representing the scaled point.
+        """
+        if not isinstance(scalar, (int, float)):
+            raise TypeError("Scalar must be int or float")
+        return  self.scale_factor(scalar, scalar)
+    
+    def direction(self) -> Self:
+        """
+        Get the direction of the point vector.
+        :return: A new Point2D instance representing the direction.
+        """
+        if self.is_zero():
+            return Point2D(0, 0)
+        length = self.magnitude()
+        return Point2D(self.x / length, self.y / length)
+
+    def distance_between(p1: Self, p2: Self) -> float:
+        """
+        Calculate the Euclidean distance between two Point2D instances.
+        :param p1: The first Point2D instance.
+        :param p2: The second Point2D instance.
+        :return: Euclidean distance as a float.
+        """
+        if not isinstance(p1, Point2D) or not isinstance(p2, Point2D):
+            raise TypeError("Both arguments must be of type Point2D")
+        return p1.distance_to(p2)
+    
+    def distance_between_xy(p1: Self, x: float, y: float) -> float:
+        """
+        Calculate the Euclidean distance between a Point2D instance and a (x, y) coordinate.
+        :param p1: The Point2D instance.
+        :param x: The x-coordinate.
+        :param y: The y-coordinate.
+        :return: Euclidean distance as a float.
+        """
+        if not isinstance(p1, Point2D):
+            raise TypeError("First argument must be of type Point2D")
+        return p1.distance_to_xy(x, y) 
+    
+    def clone(self) -> Self:
+        """
+        Create a clone of the Point2D instance.
+        :return: A new Point2D instance with the same coordinates.
+        """
+        return Point2D(self.x, self.y) 
+
+    def __hash__(self):
+        """
+        Return a hash value for the Point2D instance.
+        This allows Point2D instances to be used as keys in dictionaries or added to sets.
+        :return: Hash value as an integer.
+        """
+        return hash((self.x, self.y))
+    def __str__(self):
+        """
+        Return a string representation of the Point2D instance.
+        :return: String representation as "(x, y)".
+        """
+        return f"({self.x}, {self.y})"
+    def __bool__(self):
+        """
+        Check if the Point2D instance is non-zero.
+        :return: True if the point is not at the origin (0, 0), False otherwise.
+        """
+        return not self.is_zero()
+
+    def add_xy(self, x: int | float, y: int | float) -> Self:
+        """
+        Add a (x, y) coordinate to the current point.
+        :param x: The x-coordinate to add.
+        :param y: The y-coordinate to add.
+        :return: The current Point2D instance after addition.
+        """
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            raise TypeError("x and y must be int or float")
+        self.x += x
+        self.y += y
+        return self
+
+    def add_point(self, other: Self) -> Self:
+        """
+        Add another Point2D instance to the current point.
+        :param other: Another Point2D instance to add.
+        :return: The current Point2D instance after addition.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        self.x += other.x
+        self.y += other.y
+        return self
+    
+    def __add__(self, other: Self) -> Self:
+        """
+        Add two Point2D instances.
+        :param other: Another Point2D instance.
+        :return: A new Point2D instance representing the sum.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return Point2D(self.x + other.x, self.y + other.y)
+
+    def __iadd__(self, other: Self) -> Self:
+        """
+        In-place addition of two Point2D instances.
+        :param other: Another Point2D instance.
+        :return: The current Point2D instance after addition.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        self.x += other.x
+        self.y += other.y
+        return self
+    def __radd__(self, other: Self) -> Self:
+        """
+        Right addition of two Point2D instances.
+        :param other: Another Point2D instance.
+        :return: A new Point2D instance representing the sum.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return Point2D(other.x + self.x, other.y + self.y)
+    
+    def __sub__(self, other: Self) -> Self:
+        """
+        Subtract two Point2D instances.
+        :param other: Another Point2D instance.
+        :return: A new Point2D instance representing the difference.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return Point2D(self.x - other.x, self.y - other.y)
+    def __isub__(self, other: Self) -> Self:
+        """
+        In-place subtraction of two Point2D instances.
+        :param other: Another Point2D instance.
+        :return: The current Point2D instance after subtraction.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        self.x -= other.x
+        self.y -= other.y
+        return self
+    def __rsub__(self, other: Self) -> Self:
+        """
+        Right subtraction of two Point2D instances.
+        :param other: Another Point2D instance.
+        :return: A new Point2D instance representing the difference.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return Point2D(other.x - self.x, other.y - self.y)
+    
+    def __mul__(self, scalar: float | int) -> Self:
+        """
+        Multiply a Point2D instance by a scalar value.
+        :param scalar: Scalar value to multiply the point.
+        :return: A new Point2D instance representing the scaled point.
+        """
+        if not isinstance(scalar, (int, float)):
+            raise TypeError("Scalar must be int or float")
+        return Point2D(self.x * scalar, self.y * scalar)
+    
+    def __truediv__(self, scalar: float | int) -> Self:
+        """
+        Divide a Point2D instance by a scalar value.
+        :param scalar: Scalar value to divide the point.
+        :return: A new Point2D instance representing the scaled point.
+        """
+        if not isinstance(scalar, (int, float)):
+            raise TypeError("Scalar must be int or float")
+        if scalar == 0:
+            raise ZeroDivisionError("Division by zero is not allowed")
+        return Point2D(self.x / scalar, self.y / scalar)
+    def __floordiv__(self, scalar: float | int) -> Self:
+        """
+        Floor divide a Point2D instance by a scalar value.
+        :param scalar: Scalar value to floor divide the point.
+        :return: A new Point2D instance representing the floored point.
+        """
+        if not isinstance(scalar, (int, float)):
+            raise TypeError("Scalar must be int or float")
+        if scalar == 0:
+            raise ZeroDivisionError("Division by zero is not allowed")
+        return Point2D(self.x // scalar, self.y // scalar)
+    def __mod__(self, scalar: float | int) -> Self:
+        """
+        Modulo a Point2D instance by a scalar value.
+        :param scalar: Scalar value to modulo the point.
+        :return: A new Point2D instance representing the moduloed point.
+        """
+        if not isinstance(scalar, (int, float)):
+            raise TypeError("Scalar must be int or float")
+        if scalar == 0:
+            raise ZeroDivisionError("Division by zero is not allowed")
+        return Point2D(self.x % scalar, self.y % scalar)
+    def __pow__(self, exponent: float | int) -> Self:
+        """
+        Raise a Point2D instance to a scalar power.
+        :param exponent: Scalar exponent to raise the point.
+        :return: A new Point2D instance representing the point raised to the power.
+        """
+        if not isinstance(exponent, (int, float)):
+            raise TypeError("Exponent must be int or float")
+        return Point2D(self.x ** exponent, self.y ** exponent)
+    def __abs__(self) -> Self:
+        """
+        Return the absolute value of a Point2D instance.
+        :return: A new Point2D instance representing the absolute values.
+        """
+        return Point2D(abs(self.x), abs(self.y))
+    def __bool__(self) -> bool:
+        """
+        Return the truth value of a Point2D instance.
+        :return: True if either coordinate is non-zero, False otherwise.
+        """
+        return bool(self.x) or bool(self.y)
+    def __getstate__(self):
+        """
+        Get the state of the Point2D instance for pickling.
+        :return: A dictionary representation of the Point2D instance.
+        """
+        return {"x": self.x, "y": self.y}
+    def __setstate__(self, state):
+        """
+        Set the state of the Point2D instance from a dictionary.
+        :param state: A dictionary representation of the Point2D instance.
+        """
+        self.x = state["x"]
+        self.y = state["y"]
+    def __reduce__(self):
+        """
+        Reduce the Point2D instance for pickling.
+        :return: A tuple containing the class name and the state dictionary.
+        """
+        return (self.__class__.__name__, self.__getstate__())
+    
+    def __clone__(self):
+        """
+        Create a clone of the Point2D instance.
+        :return: A new Point2D instance with the same coordinates.
+        """
+        return Point2D(self.x, self.y) 
+    def __copy__(self):
+        """
+        Create a shallow copy of the Point2D instance.
+        :return: A new Point2D instance with the same coordinates.
+        """
+        return Point2D(self.x, self.y)
+    def __deepcopy__(self, memo=None):
+        """
+        Create a deep copy of the Point2D instance.
+        :param memo: A dictionary to keep track of copied objects.
+        :return: A new Point2D instance with the same coordinates.
+        """
+        if memo is None:
+            memo = {}
+        if id(self) in memo:
+            return memo[id(self)]
+        copy = Point2D(self.x, self.y)
+        memo[id(self)] = copy
+        return copy
+    def __format__(self, format_spec):
+        """
+        Format the Point2D instance for string representation.
+        :param format_spec: The format specification.
+        :return: A formatted string representation of the Point2D instance.
+        """
+        if format_spec == "polar":
+            r = abs(self)
+            theta = math.atan2(self.y, self.x)
+            return f"({r}, {theta})"
+        return f"({self.x}, {self.y})"
+    def __dir__(self):
+        """
+        Get a list of valid attributes for the Point2D instance.
+        :return: A list of attribute names.
+        """
+        return ["x", "y"]
+    def __sizeof__(self):
+        """
+        Get the size of the Point2D instance.
+        :return: The size of the Point2D instance in bytes.
+        """
+        return sys.getsizeof(self.x) + sys.getsizeof(self.y)

@@ -2,6 +2,8 @@ import unittest
 from math import sqrt
 # from point2d.point2d import Point2D
 from point2d import Point2D
+
+import copy
 class TestPoint2D(unittest.TestCase):
     def test_default_initialization(self):
         point = Point2D()
@@ -283,4 +285,127 @@ class TestPoint2D(unittest.TestCase):
     def test_angle_deg_origin(self):
         p = Point2D(0, 0)
         self.assertAlmostEqual(p.angle_deg(), 0.0)
+    
+    def test_negate_positive_coordinates(self):
+        p = Point2D(3, 4)
+        neg = p.negate()
+        self.assertIsInstance(neg, Point2D)
+        self.assertEqual(neg.x, -3)
+        self.assertEqual(neg.y, -4)
+
+    def test_negate_negative_coordinates(self):
+        p = Point2D(-2, -5)
+        neg = p.negate()
+        self.assertEqual(neg.x, 2)
+        self.assertEqual(neg.y, 5)
+
+    def test_negate_zero(self):
+        p = Point2D(0, 0)
+        neg = p.negate()
+        self.assertEqual(neg.x, 0)
+        self.assertEqual(neg.y, 0)
+
+    def test_negate_mixed_coordinates(self):
+        p = Point2D(-7, 8)
+        neg = p.negate()
+        self.assertEqual(neg.x, 7)
+        self.assertEqual(neg.y, -8)
+
+    def test_negate_does_not_modify_original(self):
+        p = Point2D(1, -1)
+        neg = p.negate()
+        self.assertNotEqual(id(p), id(neg))
+        self.assertEqual(p.x, 1)
+        self.assertEqual(p.y, -1)
+
+    def test_positive_positive_coordinates(self):
+        p = Point2D(3, 4)
+        pos = p.positive()
+        self.assertIsInstance(pos, Point2D)
+        self.assertEqual(pos.x, 3)
+        self.assertEqual(pos.y, 4)
+
+    def test_positive_negative_coordinates(self):
+        p = Point2D(-2, -5)
+        pos = p.positive()
+        self.assertEqual(pos.x, 2)
+        self.assertEqual(pos.y, 5)
+
+    def test_positive_zero_coordinates(self):
+        p = Point2D(0, 0)
+        pos = p.positive()
+        self.assertEqual(pos.x, 0)
+        self.assertEqual(pos.y, 0)
+
+    def test_positive_mixed_coordinates(self):
+        p = Point2D(-7, 8)
+        pos = p.positive()
+        self.assertEqual(pos.x, 7)
+        self.assertEqual(pos.y, 8)
+
+    def test_positive_does_not_modify_original(self):
+        p = Point2D(-1, 1)
+        pos = p.positive()
+        self.assertNotEqual(id(p), id(pos))
+        self.assertEqual(p.x, -1)
+        self.assertEqual(p.y, 1)
+    
+    def test_clone_returns_new_instance_with_same_coordinates(self):
+        p = Point2D(10, 20)
+        clone = p.clone()
+        self.assertIsInstance(clone, Point2D)
+        self.assertEqual(clone.x, 10)
+        self.assertEqual(clone.y, 20)
+        self.assertNotEqual(id(p), id(clone))
+
+    def test_clone_of_origin(self):
+        p = Point2D()
+        clone = p.clone()
+        self.assertEqual(clone.x, 0.0)
+        self.assertEqual(clone.y, 0.0)
+        self.assertNotEqual(id(p), id(clone))
+
+    def test_clone_does_not_affect_original(self):
+        p = Point2D(5, -7)
+        clone = p.clone()
+        clone.x = 100
+        clone.y = 200
+        self.assertNotEqual(p.x, clone.x)
+        self.assertNotEqual(p.y, clone.y)
+    
+    def test_deepcopy_returns_new_instance_with_same_coordinates(self):
+        p = Point2D(10, 20)
+        p_deep = copy.deepcopy(p)
+        self.assertIsInstance(p_deep, Point2D)
+        self.assertEqual(p_deep.x, 10)
+        self.assertEqual(p_deep.y, 20)
+        self.assertNotEqual(id(p), id(p_deep))
+
+    def test_deepcopy_of_origin(self):
+        p = Point2D()
+        p_deep = copy.deepcopy(p)
+        self.assertEqual(p_deep.x, 0.0)
+        self.assertEqual(p_deep.y, 0.0)
+        self.assertNotEqual(id(p), id(p_deep))
+
+    def test_deepcopy_does_not_affect_original(self):
+        p = Point2D(5, -7)
+        p_deep = copy.deepcopy(p)
+        p_deep.x = 100
+        p_deep.y = 200
+        self.assertNotEqual(p.x, p_deep.x)
+        self.assertNotEqual(p.y, p_deep.y)
+
+    def test_deepcopy_memoization(self):
+        p = Point2D(1, 2)
+        memo = {}
+        p_deep1 = p.__deepcopy__(memo)
+        p_deep2 = p.__deepcopy__(memo)
+        self.assertIs(p_deep1, p_deep2)
+        self.assertEqual(p_deep1.x, 1)
+        self.assertEqual(p_deep1.y, 2)
+
+
+
+
 

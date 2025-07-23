@@ -1,0 +1,68 @@
+# Check status
+git status
+
+# View changes
+git diff
+
+# Stage changes
+git add .
+
+# Commit changes
+git commit -m "Description of changes"
+
+# Pull updates
+git pull
+
+# Push changes
+git push
+# ==============================================
+# Add Files to Staging
+
+# Add all Python files
+git add *.py
+
+# Add your package directories
+git add point2d/
+
+# Add setup files
+git add setup.py
+git add README.md
+git add LICENSE
+
+# Use this to add all files not in .gitignore
+# git add .
+
+# Push to Remote (Optional)
+git branch -M main
+git push -u origin main
+
+# Process to commit changes
+Committing Changes to Git
+To commit your changes to Git, follow these steps:
+
+1. Check Status
+First, check what files have been modified:
+git status
+2. Stage Changes
+Add the files you want to commit:
+# Add specific files
+git add point2d/point2d.py point2d/test_point2d.py
+
+# Or add all changed files
+git add .
+
+3. Create Commit
+Commit your changes with a descriptive message:
+git commit -m "Implement Point2D class with polar/cartesian conversions and normalization"
+
+4. Additional Information for the Commit
+If you want to provide more details about your commit, you can use a multi-line commit message:
+git commit -m "Implement Point2D class" -m "- Add polar/cartesian coordinate conversions
+- Implement point normalization
+- Fix angle calculations for polar coordinates
+- Add distance calculation methods
+- Add comprehensive test suite"
+
+5. Push Changes (Optional)
+If you've set up a remote repository:
+git push origin main

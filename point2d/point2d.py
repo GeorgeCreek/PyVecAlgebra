@@ -1,4 +1,4 @@
-from math import pi
+from math import pi, sqrt
 from typing import Self
 
 rad_to_deg = 180/pi # convert radians to degrees
@@ -86,6 +86,42 @@ class Point2D:
         """
         return not self.is_zero()
     
+    def radius(self) -> float:
+        """
+        Calculate the distance from the point to the origin (0, 0).
+        :return: Distance as a float.
+        """
+        return (sqrt(self.x * self.x + self.y * self.y))
+
+    def angle_rad(self) -> float:
+        """
+        Calculate the angle of the point in radians.
+        :return: Angle in radians as a float.
+        """
+        from math import atan2
+        return atan2(-self.y, self.x)
+
+    def angle_deg(self) -> float:
+        """
+        Calculate the angle of the point in degrees.
+        :return: Angle in degrees as a float.
+        """
+        angle = self.angle_rad() * rad_to_deg
+        if angle < 0:
+            angle += 360
+        return angle
+
+    def set_cartesian(self, x: float, y: float) -> None:
+        """
+        Set the point's coordinates using Cartesian coordinates.
+        :param x: X-coordinate of the point.
+        :param y: Y-coordinate of the point.
+        """
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            raise TypeError("x and y must be int or float")
+        self.x = x
+        self.y = y
+            
     def set_polar(self, radius: float, angle: float) -> None: 
         """
         Set the point's coordinates using polar coordinates.
@@ -107,8 +143,8 @@ class Point2D:
         :return: A tuple (radius, angle) where radius is the distance from the origin and angle is in degrees.
         """
         from math import atan2, sqrt
-        radius = sqrt(self.x ** 2 + self.y ** 2)
-        
+        radius = sqrt(self.x * self.x + self.y * self.y)
+
         # Handle the origin case (0,0) specially to avoid undefined angle
         if radius == 0:
             return (0.0, 0.0)
@@ -129,8 +165,8 @@ class Point2D:
         """
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
-        mid_x = (self.x + other.x) / 2
-        mid_y = (self.y + other.y) / 2
+        mid_x = 0.5 * (self.x + other.x)
+        mid_y = 0.5 * (self.y + other.y)
         return Point2D(mid_x, mid_y)
 
     def midpoint_to_xy(self, x: float, y: float) -> Self:
@@ -142,8 +178,8 @@ class Point2D:
         """
         if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
             raise TypeError("x and y must be int or float")
-        mid_x = (self.x + x) / 2
-        mid_y = (self.y + y) / 2
+        mid_x = 0.5 * (self.x + x)
+        mid_y = 0.5 * (self.y + y)
         return Point2D(mid_x, mid_y)
     def midpoint_p1_p2(self, other: Self) -> Self:
         """
@@ -153,8 +189,8 @@ class Point2D:
         """
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
-        mid_x = (self.x + other.x) / 2
-        mid_y = (self.y + other.y) / 2
+        mid_x = 0.5 * (self.x + other.x)
+        mid_y = 0.5 * (self.y + other.y)
         return Point2D(mid_x, mid_y)
 
     def __repr__(self):
@@ -180,7 +216,16 @@ class Point2D:
         """
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
-        return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
+        return sqrt((self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y))
+    def distance_to_squared(self, other):
+        """
+        Calculate the squared Euclidean distance to another Point2D.
+        :param other: Another Point2D instance.
+        :return: Squared Euclidean distance as a float.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return (self.x - other.x) * (self.x - other.x) + (self.y - other.y) * (self.y - other.y)
 
     def normalize(self) -> bool:
         """
@@ -189,22 +234,12 @@ class Point2D:
         """
         if self.is_zero():
             return False
-        distance = self.distance_to(Point2D(0, 0))
-        if distance == 0:
-            raise ValueError("Cannot normalize a point at the origin")
+        length = self.distance_to_squared(Point2D(0, 0))
+        if length == 0:
             return False
-        elif distance < 0:
-            raise ValueError("Distance must be non-negative")
-            return False
-        elif distance < 1:
-            self.x *= distance
-            self.y *= distance
-            return True
-        elif distance == 1:
-            self.x = 1
-            self.y = 0
+        elif length == 1:
             return True
         else:
-            self.x /= distance
-            self.y /= distance
+            self.x /= sqrt(length)
+            self.y /= sqrt(length)
             return True

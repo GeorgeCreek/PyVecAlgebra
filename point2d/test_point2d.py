@@ -1,5 +1,6 @@
 import unittest
-
+from math import sqrt
+# from point2d.point2d import Point2D
 from point2d import Point2D
 class TestPoint2D(unittest.TestCase):
     def test_default_initialization(self):
@@ -43,6 +44,15 @@ class TestPoint2D(unittest.TestCase):
         distance = p1.distance_to(p2)
         expected_distance = ((1 - 4) ** 2 + (1 - 5) ** 2) ** 0.5
         self.assertAlmostEqual(distance, expected_distance)
+    def test_distance_to_invalid_type(self):
+        p1 = Point2D(1, 1)
+        with self.assertRaises(TypeError):
+            p1.distance_to((1, 2))
+    
+    def test_normalize_less_than_one(self):
+        p = Point2D(0.5, 0.5)
+        p.normalize()
+        self.assertAlmostEqual(p.x, 0.7071, places=4)
 
     def test_equality(self):
         p1 = Point2D(1, 1)
@@ -104,7 +114,12 @@ class TestPoint2D(unittest.TestCase):
         p.set_polar(5, 0)
         self.assertAlmostEqual(p.x, 5)
         self.assertAlmostEqual(p.y, 0)
-
+        p.set_polar(5, 45)
+        self.assertAlmostEqual(p.x, 3.5355339059327378)
+        self.assertAlmostEqual(p.y, -3.5355339059327378)
+        p.set_polar(5, -45)
+        self.assertAlmostEqual(p.x, 3.5355339059327378)
+        self.assertAlmostEqual(p.y, 3.5355339059327378)
         p.set_polar(5, 90)
         self.assertAlmostEqual(p.x, 0, places=6)
         self.assertAlmostEqual(p.y, -5, places=6)
@@ -221,8 +236,8 @@ class TestPoint2D(unittest.TestCase):
         p = Point2D(0.3, 0.4)  # distance = 0.5
         result = p.normalize()
         self.assertTrue(result)
-        self.assertAlmostEqual(p.x, 0.15)
-        self.assertAlmostEqual(p.y, 0.2)
+        self.assertAlmostEqual(p.x, 0.6)
+        self.assertAlmostEqual(p.y, 0.8)
 
     def test_normalize_negative_distance(self):
         # Should never happen, but test for code path
@@ -242,6 +257,30 @@ class TestPoint2D(unittest.TestCase):
         with self.assertRaises(ValueError):
             p.normalize()
         p.distance_to = orig_distance_to
+    
+    def test_angle_deg_on_x_axis(self):
+        p = Point2D(5, 0)
+        self.assertAlmostEqual(p.angle_deg(), 0.0)
+        p_neg = Point2D(-5, 0)
+        self.assertAlmostEqual(p_neg.angle_deg(), 180.0)
 
+    def test_angle_deg_on_y_axis(self):
+        p = Point2D(0, 5)
+        self.assertAlmostEqual(p.angle_deg(), 270.0)
+        p_neg = Point2D(0, -5)
+        self.assertAlmostEqual(p_neg.angle_deg(), 90.0)
 
+    def test_angle_deg_quadrants(self):
+        p = Point2D(1, 1)
+        self.assertAlmostEqual(p.angle_deg(), 315.0)
+        p = Point2D(-1, 1)
+        self.assertAlmostEqual(p.angle_deg(), 225.0)
+        p = Point2D(-1, -1)
+        self.assertAlmostEqual(p.angle_deg(), 135.0)
+        p = Point2D(1, -1)
+        self.assertAlmostEqual(p.angle_deg(), 45.0)
+
+    def test_angle_deg_origin(self):
+        p = Point2D(0, 0)
+        self.assertAlmostEqual(p.angle_deg(), 0.0)
 

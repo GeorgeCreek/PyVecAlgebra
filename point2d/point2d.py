@@ -1,4 +1,4 @@
-from math import pi, sqrt
+from math import pi, sqrt, degrees, radians, atan2
 from typing import Self
 
 rad_to_deg = 180/pi # convert radians to degrees
@@ -291,7 +291,28 @@ class Point2D:
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
         return sqrt(self.distance_to_squared(other))
-    
+    def angle_to_rad(self, other: Self) -> float:
+        """
+        Calculate the angle in radians from this point to another Point2D.
+        :param other: Another Point2D instance.
+        :return: Angle in radians as a float.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        from math import atan2
+        angle_rad = atan2(-(other.y - self.y), other.x - self.x)
+        return angle_rad if angle_rad >= 0 else angle_rad + 2 * pi
+
+    def angle_to_deg(self, other: Self) -> float:
+        """
+        Calculate the angle in degrees from this point to another Point2D.
+        :param other: Another Point2D instance.
+        :return: Angle in degrees as a float.
+        """
+        if not isinstance(other, Point2D):
+            raise TypeError("Argument must be of type Point2D")
+        return degrees(self.angle_to_rad(other))
+   
     def distance_to_xy(self, x: float, y: float) -> float:
         """
         Calculate the Euclidean distance to a given (x, y) coordinate.

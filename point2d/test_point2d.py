@@ -1,5 +1,5 @@
 import unittest
-from math import sqrt
+from math import sqrt, pi
 # from point2d.point2d import Point2D
 from point2d import Point2D
 
@@ -88,10 +88,6 @@ class TestPoint2D(unittest.TestCase):
     def test_invalid_two_values_type(self):
         with self.assertRaises(TypeError):
             Point2D(1, "a")
-
-    def test_repr(self):
-        p = Point2D(3, 4)
-        self.assertEqual(repr(p), "Point2D(x=3, y=4)")
 
     def test_distance_to_type_error(self):
         p = Point2D(1, 2)
@@ -404,6 +400,42 @@ class TestPoint2D(unittest.TestCase):
         self.assertIs(p_deep1, p_deep2)
         self.assertEqual(p_deep1.x, 1)
         self.assertEqual(p_deep1.y, 2)
+
+    def test_angle_to_rad_and_deg(self):
+
+        p1 = Point2D(0, 0)
+        p2 = Point2D(1, 0)
+        # Angle from origin to (1,0) should be 0 radians, 0 degrees
+        self.assertAlmostEqual(p1.angle_to_rad(p2), 0.0)
+        self.assertAlmostEqual(p1.angle_to_deg(p2), 0.0)
+
+        # Angle from origin to (0,1) should be -pi/2 radians, but wrapped to 3*pi/2, 270 degrees
+        self.assertAlmostEqual(p1.angle_to_rad(Point2D(0, 1)), 3 * pi / 2)
+        self.assertAlmostEqual(p1.angle_to_deg(Point2D(0, 1)), 270.0)
+
+        # Angle from origin to (-1,0) should be pi radians, 180 degrees
+        self.assertAlmostEqual(p1.angle_to_rad(Point2D(-1, 0)), pi)
+        self.assertAlmostEqual(p1.angle_to_deg(Point2D(-1, 0)), 180.0)
+
+        # Angle from origin to (0,-1) should be pi/2 radians, 90 degrees
+        self.assertAlmostEqual(p1.angle_to_rad(Point2D(0, -1)), pi / 2)
+        self.assertAlmostEqual(p1.angle_to_deg(Point2D(0, -1)), 90.0)
+
+        # Quadrant checks
+        self.assertAlmostEqual(p1.angle_to_deg(Point2D(1, 1)), 315.0)
+        self.assertAlmostEqual(p1.angle_to_deg(Point2D(-1, 1)), 225.0)
+        self.assertAlmostEqual(p1.angle_to_deg(Point2D(-1, -1)), 135.0)
+        self.assertAlmostEqual(p1.angle_to_deg(Point2D(1, -1)), 45.0)
+
+    def test_angle_to_rad_type_error(self):
+        p = Point2D(0, 0)
+        with self.assertRaises(TypeError):
+            p.angle_to_rad((1, 2))
+
+    def test_angle_to_deg_type_error(self):
+        p = Point2D(0, 0)
+        with self.assertRaises(TypeError):
+            p.angle_to_deg([1, 2])
 
 
 

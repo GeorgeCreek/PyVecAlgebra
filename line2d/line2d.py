@@ -4,6 +4,8 @@ try:
     from .version import __version__
 except ImportError:
     __version__ = "unknown"
+from math import pi, atan2, sqrt, fabs, cos, sin, degrees, radians
+
 class Line2D:
     def __init__(self, *points):
         if len(points) == 0:
@@ -145,5 +147,109 @@ class Line2D:
         return (self._pt1 == other._pt1 and self._pt2 == other._pt2) or \
                (self._pt1 == other._pt2 and self._pt2 == other._pt1)
 
-    def __repr__(self):
+    def set_line(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float) -> Self:
+        """Set the line using coordinates."""
+        if not all(isinstance(coord, (int, float)) for coord in (x1, y1, x2, y2)):
+            raise TypeError("Coordinates must be numeric values.")
+        self._pt1 = Point2D(x1, y1)
+        self._pt2 = Point2D(x2, y2)
+        return self
+    
+    def dx(self) -> int | float:
+        """Get the x-coordinate difference between the start and end points."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        return self._pt2.x - self._pt1.x
+    def dy(self) -> int | float:
+        """Get the y-coordinate difference between the start and end points."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        return self._pt2.y - self._pt1.y
+    def slope(self) -> float:
+        """Calculate the slope of the line."""
+        if self.dx() == 0:
+            raise ZeroDivisionError("Slope is undefined for vertical lines.")
+        return self.dy() / self.dx()
+    
+    def normal_vector(self) -> Self:
+        """Get the normal vector of the line."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        if self.dx() == 0 and self.dy() == 0:
+            raise ValueError("Normal vector cannot be zero.")
+        normal_vector = Line2D(self._pt1, Point2D(self._pt1.x - self.dy(), self._pt1.y + self.dx()))
+        if not isinstance(normal_vector, Line2D):
+            raise TypeError("Normal vector must be a Line2D instance.")
+        return normal_vector
+
+    def unit_vector(self) -> Self:
+        """Get the unit vector of the line."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        if self.length() == 0:
+            raise ValueError("Cannot calculate unit vector for a zero-length line.")
+        if self.dx() == 0 and self.dy() == 0:
+            raise ValueError("Unit vector cannot be zero.")
+        unit_vector = Line2D(self._pt1, Point2D(self._pt1.x + self.dx() / self.length(), self._pt1.y + self.dy() / self.length()))
+        if not isinstance(unit_vector, Line2D):
+            raise TypeError("Unit vector must be a Line2D instance.")
+        if fabs(unit_vector.dx()) < 1e-9 and fabs(unit_vector.dy()) < 1e-9:
+            raise ValueError("Unit vector cannot be zero.")
+        return unit_vector
+
+    def length(self) -> float:
+        """Calculate the length of the line."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        return sqrt(self.dx() * self.dx() + self.dy() * self.dy())
+    def set_length(self, length: float) -> Self:
+        """Set the length of the line."""
+        if length < 0:
+           raise ValueError("Length cannot be negative.")
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        if not isinstance(length, (int, float)):
+            raise TypeError("Length must be a numeric value.")
+        if self.length() == 0:
+            raise ValueError("Cannot set length for a zero-length line.")
+        unit_vector = self.unit_vector()
+        if not isinstance(unit_vector, Line2D):
+            raise TypeError("Unit vector must be a Line2D instance.")
+        self._pt2 = Point2D(self._pt1.x + unit_vector.dx() * length, self._pt1.y + unit_vector.dy() * length)
+        return self
+
+    def angle(self) -> float:
+        """Calculate the angle of the line in radians."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        #if self.dx() == 0:
+        #    raise ZeroDivisionError("Slope is undefined for vertical lines.")
+        angle_rad = atan2(-self.dy(), self.dx())
+        # Normalize angle to be in the range [0, 2*pi)
+        return angle_rad if angle_rad >= 0 else angle_rad + 2 * pi
+    
+    def angle_deg(self) -> float:
+        """Calculate the angle of the line in degrees."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        return degrees(self.angle())
+    def set_angle(self, angle: float) -> Self:
+        """Set the angle of the line in radians."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        if not isinstance(angle, (int, float)):
+            raise TypeError("Angle must be a numeric value.")
+        length = self.length()
+        if length == 0:
+            raise ValueError("Cannot set angle for a zero-length line.")
+        angle_rad = radians(angle)
+        self._pt2 = Point2D(self._pt1.x + length * cos(angle_rad), self._pt1.y - length * sin(angle_rad))
+        return self
+
+    def __repr__(self) -> str:
+        """Return a string representation of the line."""
         return f"Line2D({self._pt1}, {self._pt2})"
+    
+    def __str__(self) -> str:
+        """Return a user-friendly string representation of the line."""
+        return f"Line from {self._pt1} to {self._pt2}"

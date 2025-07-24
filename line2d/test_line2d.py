@@ -1,6 +1,7 @@
 import unittest
 from line2d.line2d import Line2D
 from point2d.point2d import Point2D
+from math import pi, sqrt, atan2, degrees
 
 class TestLine2D(unittest.TestCase):
 
@@ -167,11 +168,207 @@ class TestLine2D(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = line.ep_y
 
-   
-    '''
+    def test_dx_and_dy(self):
+        line = Line2D(Point2D(1, 2), Point2D(4, 6))
+        self.assertEqual(line.dx(), 3)
+        self.assertEqual(line.dy(), 4)
+
+    def test_dx_and_dy_raises_when_none(self):
+        line = Line2D()
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.dx()
+        line._pt1 = Point2D()
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.dy()
+
     def test_repr(self):
-        l = Line2D(Point2D(1, 2), Point2D(3, 4))
-        self.assertEqual(repr(l), "Line2D(Point2D(1, 2), Point2D(3, 4))")
-    '''
+        pt1 = Point2D(1, 2)
+        pt2 = Point2D(3, 4)
+        line = Line2D(pt1, pt2)
+        self.assertEqual(repr(line), f"Line2D({pt1}, {pt2})")
+
+    def test_length(self):
+        line = Line2D(Point2D(0, 0), Point2D(3, 4))
+        self.assertAlmostEqual(line.length(), 5.0)
+        line2 = Line2D(Point2D(1, 1), Point2D(4, 5))
+        self.assertAlmostEqual(line2.length(), 5.0)
+
+    def test_length_raises_when_none(self):
+        line = Line2D()
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.length()
+        line._pt1 = Point2D()
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.length()
+
+    def test_angle_horizontal_0(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        self.assertAlmostEqual(line.angle_deg(), 0.0)
+
+    def test_angle_horizontal_neg(self):
+        line = Line2D(Point2D(1, 0), Point2D(0, 0))
+        self.assertAlmostEqual(line.angle_deg(), 180)
+    
+    def test_angle_diagonal_315(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        self.assertAlmostEqual(line.angle_deg(), 315)
+
+    def test_angle_vertical_270(self):
+        line = Line2D(Point2D(0, 0), Point2D(0, 1))
+        self.assertAlmostEqual(line.angle_deg(), 270)
+
+    def test_angle_diagonal_225(self):
+        line = Line2D(Point2D(0, 0), Point2D(-1, 1))
+        self.assertAlmostEqual(line.angle_deg(), 225)
+
+    def test_angle_horizontal_180(self):
+        line = Line2D(Point2D(0, 0), Point2D(-1, 0))
+        self.assertAlmostEqual(line.angle_deg(), 180)
+
+    def test_angle_diagonal_135(self):
+        line = Line2D(Point2D(0, 0), Point2D(-1, -1))
+        self.assertAlmostEqual(line.angle_deg(), 135)    
+    def test_angle_vertical_90(self):
+        line = Line2D(Point2D(0, 0), Point2D(0, -1))
+        self.assertAlmostEqual(line.angle_deg(), 90)
+
+    def test_angle_negative(self):
+        line = Line2D(Point2D(0, 0), Point2D(-1, -1))
+        self.assertAlmostEqual(line.angle_deg(), 135)
+
+    def test_angle_raises_when_none(self):
+        line = Line2D()
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.angle()
+        line._pt1 = Point2D()
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.angle()
+
+    def test_set_length_positive(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_length(5)
+        self.assertAlmostEqual(line.length(), 5.0)
+        self.assertEqual(line._pt1, Point2D(0, 0))
+        self.assertAlmostEqual(line._pt2.x, 5.0)
+        self.assertAlmostEqual(line._pt2.y, 0.0)
+
+    def test_set_length_positive(self):
+        line = Line2D(Point2D(0, 0), Point2D(3, 4))
+        line.set_length(10)
+        self.assertAlmostEqual(line.length(), 10.0)
+        self.assertEqual(line._pt1, Point2D(0, 0))
+        self.assertAlmostEqual(line._pt2.x, 6)
+        self.assertAlmostEqual(line._pt2.y, 8)
+    def test_set_length_positive(self):
+        line = Line2D(Point2D(0, 0), Point2D(-3, -4))
+        line.set_length(10)
+        self.assertAlmostEqual(line.length(), 10.0)
+        self.assertEqual(line._pt1, Point2D(0, 0))
+        self.assertAlmostEqual(line._pt2.x, -6)
+        self.assertAlmostEqual(line._pt2.y, -8)
+    def test_set_length_negative(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        with self.assertRaises(ValueError):
+            line.set_length(-5)
+
+    def test_set_length_none_points_raises(self):
+        line = Line2D()
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.set_length(5)
+        line._pt1 = Point2D()
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.set_length(5)
+
+    def test_set_length_non_numeric_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        with self.assertRaises(TypeError):
+            line.set_length("not a number")
+
+    def test_set_length_zero_length_raises(self):
+        pt = Point2D(1, 1)
+        line = Line2D(pt, pt)
+        with self.assertRaises(ValueError):
+            line.set_length(5)
+
+    def test_set_angle_horizontal(self):
+        line = Line2D(Point2D(0, 0), Point2D(0, 1))
+        line.set_angle(0)
+        self.assertAlmostEqual(line.angle_deg(), 0.0)
+        self.assertAlmostEqual(line._pt2.x, 1.0)
+        self.assertAlmostEqual(line._pt2.y, 0.0)
+
+    def test_set_angle_vertical_up(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(270)
+        self.assertAlmostEqual(line.angle_deg(), 270)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, 1.0)
+
+    def test_set_angle_vertical_down(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(90)
+        self.assertAlmostEqual(line.angle_deg(), 90)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, -1.0)
+
+    def test_set_angle_diagonal_315(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(315)
+        self.assertAlmostEqual(line.angle_deg(), 315)
+        self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
+        self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
+        self.assertAlmostEqual(line.length(), 1.0)
+    def test_set_angle_diagonal_minus45(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(-45)
+        self.assertAlmostEqual(line.angle_deg(), 315)
+        self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
+        self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
+        self.assertAlmostEqual(line.length(), 1.0)
+    def test_set_angle_diagonal_225(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(225)
+        self.assertAlmostEqual(line.angle_deg(), 225)
+        self.assertAlmostEqual(line._pt2.x, -0.7071067811865474)
+        self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
+        self.assertAlmostEqual(line.length(), 1.0)
+    def test_set_angle_diagonal_minus135(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(-135)
+        self.assertAlmostEqual(line.angle_deg(), 225)
+        self.assertAlmostEqual(line._pt2.x, -0.7071067811865474)
+        self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
+        self.assertAlmostEqual(line.length(), 1.0)
+    def test_set_angle_non_numeric_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        with self.assertRaises(TypeError):
+            line.set_angle("not a number")
+
+    def test_set_angle_none_points_raises(self):
+        line = Line2D()
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.set_angle(45)
+        line._pt1 = Point2D()
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.set_angle(45)
+
+    def test_set_angle_zero_length_raises(self):
+        pt = Point2D(1, 1)
+        line = Line2D(pt, pt)
+        with self.assertRaises(ValueError):
+            line.set_angle(45)
+
+    
+    
 if __name__ == "__main__":
     unittest.main()

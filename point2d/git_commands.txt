@@ -66,3 +66,7 @@ git commit -m "Implement Point2D class" -m "- Add polar/cartesian coordinate con
 5. Push Changes (Optional)
 If you've set up a remote repository:
 git push origin main
+
+
+# In PowerShell
+.\venv\Scripts\Activate.ps1

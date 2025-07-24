@@ -197,7 +197,7 @@ class Point2D:
         """
         Return a string representation of the Point2D instance.
         """
-        return f"Point2D(x={self.x}, y={self.y})"
+        return "Point2D(%g, %g)" % tuple(map(float, [self.x, self.y]))
 
     def __eq__(self, other):
         """
@@ -259,6 +259,18 @@ class Point2D:
         """
         return -self
     
+    def swap(self) -> None:
+        """
+        Swap the x and y coordinates of the point.
+        """
+        self.x, self.y = self.y, self.x
+
+    def swap_xy(self) -> Self:
+        """
+        Swap the x and y coordinates of the point.
+        :return: A new Point2D instance with swapped coordinates.
+        """
+        return Point2D(self.y, self.x)
 
     def distance_to_squared(self, other):
         """
@@ -423,7 +435,8 @@ class Point2D:
         Return a string representation of the Point2D instance.
         :return: String representation as "(x, y)".
         """
-        return f"({self.x}, {self.y})"
+        return "(x: %g, y:%g)" % tuple(map(float, [self.x, self.y]))
+
     def __bool__(self):
         """
         Check if the Point2D instance is non-zero.

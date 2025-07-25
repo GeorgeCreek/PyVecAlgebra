@@ -368,6 +368,337 @@ class TestLine2D(unittest.TestCase):
         with self.assertRaises(ValueError):
             line.set_angle(45)
 
+    def test_angle_to_line_horizontal_vs_vertical(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))  # 0 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(0, 1))  # 270 deg
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 270)
+        self.assertTrue(is_clockwise)
+
+    def test_angle_to_line_vertical_vs_horizontal(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(0, 1))  # 270 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 0))  # 0 deg
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 270)
+        self.assertFalse(is_clockwise)
+    def test_angle_to_line_from_315_to_225(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))  # 315 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(-1, 1)) # 225 deg
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 90)
+        self.assertFalse(is_clockwise)
+    def test_angle_to_line_from_225_to_315(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(-1, 1))  # 225 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1)) # 315 deg
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 90)
+        self.assertTrue(is_clockwise)
+    def test_angle_to_line_from_315_to_135(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))  # 315 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(-1, -1)) # 135 deg
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 180)
+        self.assertFalse(is_clockwise)
+    def test_angle_to_line_from_135_to_315(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(-1, -1))  # 135 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1)) # 315 deg
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 180)
+        self.assertTrue(is_clockwise)
+
+    def test_angle_to_line_same_direction(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line2 = Line2D(Point2D(0, 0), Point2D(2, 0))
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(angle, 0)
+        self.assertFalse(is_clockwise)
+
+    def test_angle_to_line_opposite_direction(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line2 = Line2D(Point2D(0, 0), Point2D(-1, 0))
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 180)
+        self.assertTrue(is_clockwise)
+
+    def test_angle_to_line_diagonal(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))  # 0 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))  # 315 deg
+        angle, is_clockwise = line1.angle_to_line(line2)
+        self.assertAlmostEqual(degrees(angle), 315)
+        self.assertTrue(is_clockwise)
+
+    def test_angle_to_line_type_error(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        with self.assertRaises(TypeError):
+            line.angle_to_line("not a line")
+
+    def test_angle_to_line_none_points_raises(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line1._pt1 = None
+        with self.assertRaises(ValueError):
+            line1.angle_to_line(line2)
+        line1._pt1 = Point2D(0, 0)
+        line1._pt2 = None
+        with self.assertRaises(ValueError):
+            line1.angle_to_line(line2)
+        line1._pt2 = Point2D(1, 0)
+        line2._pt1 = None
+        with self.assertRaises(ValueError):
+            line1.angle_to_line(line2)
+        line2._pt1 = Point2D(0, 0)
+        line2._pt2 = None
+        with self.assertRaises(ValueError):
+            line1.angle_to_line(line2)
+
+    def test_normal_vector_horizontal(self):
+        line = Line2D(Point2D(0, 0), Point2D(2, 0))
+        normal = line.normal_vector()
+        self.assertIsInstance(normal, Line2D)
+        # For horizontal line from (0,0) to (2,0), normal should go from (0,0) to (0,2)
+        self.assertEqual(normal._pt1, Point2D(0, 0))
+        self.assertEqual(normal._pt2, Point2D(0, 2))
+
+    def test_normal_vector_vertical(self):
+        line = Line2D(Point2D(0, 0), Point2D(0, 3))
+        normal = line.normal_vector()
+        self.assertIsInstance(normal, Line2D)
+        # For vertical line from (0,0) to (0,3), normal should go from (0,0) to (-3,0)
+        self.assertEqual(normal._pt1, Point2D(0, 0))
+        self.assertEqual(normal._pt2, Point2D(-3, 0))
+
+    def test_normal_vector_diagonal(self):
+        line = Line2D(Point2D(1, 2), Point2D(4, 6))
+        normal = line.normal_vector()
+        self.assertIsInstance(normal, Line2D)
+        # dx = 3, dy = 4, so normal should go from (1,2) to (1-4, 2+3) = (-3,5)
+        self.assertEqual(normal._pt1, Point2D(1, 2))
+        self.assertEqual(normal._pt2, Point2D(-3, 5))
+
+    def test_normal_vector_negative(self):
+        line = Line2D(Point2D(0, 0), Point2D(-2, -2))
+        normal = line.normal_vector()
+        self.assertIsInstance(normal, Line2D)
+        # dx = -2, dy = -2, so normal should go from (0,0) to (0-(-2), 0+(-2)) = (2, -2)
+        self.assertEqual(normal._pt1, Point2D(0, 0))
+        self.assertEqual(normal._pt2, Point2D(2, -2))
+
+    def test_normal_vector_zero_length_raises(self):
+        pt = Point2D(1, 1)
+        line = Line2D(pt, pt)
+        with self.assertRaises(ValueError):
+            line.normal_vector()
+
+    def test_normal_vector_none_points_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.normal_vector()
+        line._pt1 = Point2D(0, 0)
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.normal_vector()
+
+    def test_set_polar_coordinates_horizontal(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line.set_polar_coordinates(5, 0)
+        self.assertAlmostEqual(line.length(), 5.0)
+        self.assertAlmostEqual(line._pt2.x, 5.0)
+        self.assertAlmostEqual(line._pt2.y, 0.0)
+
+    def test_set_polar_coordinates_vertical_up(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line.set_polar_coordinates(3, 270)
+        self.assertAlmostEqual(line.length(), 3.0)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, 3.0)
+
+    def test_set_polar_coordinates_vertical_down(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line.set_polar_coordinates(2, 90)
+        self.assertAlmostEqual(line.length(), 2.0)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, -2.0)
+
+    def test_set_polar_coordinates_diagonal_315(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line.set_polar_coordinates(1, 315)
+        self.assertAlmostEqual(line.length(), 1.0)
+        self.assertAlmostEqual(line._pt2.x, 0.7071067811865476)
+        self.assertAlmostEqual(line._pt2.y, 0.7071067811865474)
+
+    def test_set_polar_coordinates_negative_length_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(ValueError):
+            line.set_polar_coordinates(-1, 45)
+
+    def test_set_polar_coordinates_non_numeric_length_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.set_polar_coordinates("not a number", 45)
+
+    def test_set_polar_coordinates_non_numeric_angle_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.set_polar_coordinates(5, "not a number")
+
+    def test_set_polar_coordinates_none_points_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.set_polar_coordinates(5, 45)
+        line._pt1 = Point2D(0, 0)
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.set_polar_coordinates(5, 45)
+
+    def test_set_cartesian_coordinates_horizontal(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        result = line.set_cartesian_coordinates(5, 0)
+        self.assertIs(result, line)
+        self.assertEqual(line._pt2, Point2D(5, 0))
+        self.assertAlmostEqual(line.length(), 5.0)
+
+    def test_set_cartesian_coordinates_vertical(self):
+        line = Line2D(Point2D(2, 3), Point2D(4, 5))
+        result = line.set_cartesian_coordinates(2, 8)
+        self.assertIs(result, line)
+        self.assertEqual(line._pt2, Point2D(2, 8))
+        self.assertAlmostEqual(line.length(), 5.0)
+
+    def test_set_cartesian_coordinates_diagonal(self):
+        line = Line2D(Point2D(1, 1), Point2D(2, 2))
+        result = line.set_cartesian_coordinates(4, 5)
+        self.assertIs(result, line)
+        self.assertEqual(line._pt2, Point2D(4, 5))
+        self.assertAlmostEqual(line.length(), sqrt((4-1)**2 + (5-1)**2))
+
+    def test_set_cartesian_coordinates_non_numeric_x(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.set_cartesian_coordinates("not a number", 5)
+
+    def test_set_cartesian_coordinates_non_numeric_y(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.set_cartesian_coordinates(5, None)
+
+    def test_set_cartesian_coordinates_none_pt1_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line._pt1 = None
+        with self.assertRaises(AttributeError):
+            line.set_cartesian_coordinates(5, 5)
+
+    def test_distance_to_point_horizontal(self):
+        line = Line2D(Point2D(0, 0), Point2D(4, 0))
+        pt = Point2D(2, 3)
+        # Distance from (2,3) to y=0 is 3
+        self.assertAlmostEqual(line.distance_to_point(pt), 3.0)
+
+    def test_distance_to_point_vertical(self):
+        line = Line2D(Point2D(1, 1), Point2D(1, 5))
+        pt = Point2D(4, 3)
+        # Distance from (4,3) to x=1 is 3
+        self.assertAlmostEqual(line.distance_to_point(pt), 3.0)
+
+    def test_distance_to_point_diagonal(self):
+        line = Line2D(Point2D(0, 0), Point2D(4, 4))
+        pt = Point2D(2, 0)
+        # Distance from (2,0) to line y=x is sqrt(2)
+        self.assertAlmostEqual(line.distance_to_point(pt), sqrt(2), places=6)
+
+    def test_distance_to_point_on_line(self):
+        line = Line2D(Point2D(0, 0), Point2D(4, 0))
+        pt = Point2D(2, 0)
+        self.assertAlmostEqual(line.distance_to_point(pt), 0.0)
+
+    def test_distance_to_point_type_error(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.distance_to_point("not a point")
+
+    def test_distance_to_point_none_points_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.distance_to_point(Point2D(1, 2))
+        line._pt1 = Point2D(0, 0)
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.distance_to_point(Point2D(1, 2))
+
+    def test_distance_to_point_zero_length_line(self):
+        pt = Point2D(1, 1)
+        line = Line2D(pt, pt)
+        # Should return inf for zero-length line
+        self.assertEqual(line.distance_to_point(Point2D(2, 2)), float('inf'))
+
+    def test_rotate_horizontal_90(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.rotate(90)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, 1.0)
+        self.assertAlmostEqual(line.length(), 1.0)
+
+    def test_rotate_horizontal_180(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.rotate(180)
+        self.assertAlmostEqual(line._pt2.x, -1.0)
+        self.assertAlmostEqual(line._pt2.y, 0.0)
+        self.assertAlmostEqual(line.length(), 1.0)
+
+    def test_rotate_horizontal_270(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.rotate(270)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, -1.0)
+        self.assertAlmostEqual(line.length(), 1.0)
+
+    def test_rotate_horizontal_360(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.rotate(360)
+        self.assertAlmostEqual(line._pt2.x, 1.0)
+        self.assertAlmostEqual(line._pt2.y, 0.0)
+        self.assertAlmostEqual(line.length(), 1.0)
+
+    def test_rotate_vertical_90(self):
+        line = Line2D(Point2D(0, 0), Point2D(0, 1))
+        line.rotate(90)
+        self.assertAlmostEqual(line._pt2.x, -1.0)
+        self.assertAlmostEqual(line._pt2.y, 0.0)
+        self.assertAlmostEqual(line.length(), 1.0)
+
+    def test_rotate_diagonal_45(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line.rotate(45)
+        self.assertAlmostEqual(line._pt2.x, 0)
+        self.assertAlmostEqual(line._pt2.y, 1.4142135623730951)
+        self.assertAlmostEqual(line.length(), sqrt(2))
+
+    def test_rotate_negative_angle(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.rotate(-90)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, -1.0)
+        self.assertAlmostEqual(line.length(), 1.0)
+
+    def test_rotate_non_numeric_angle_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        with self.assertRaises(TypeError):
+            line.rotate("not a number")
+
+    def test_rotate_none_points_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.rotate(90)
+        line._pt1 = Point2D(0, 0)
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.rotate(90)
+
+    
+
     
     
 if __name__ == "__main__":

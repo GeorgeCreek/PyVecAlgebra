@@ -153,6 +153,16 @@ class Line2D:
         return (self._pt1 == other._pt1 and self._pt2 == other._pt2) or \
                (self._pt1 == other._pt2 and self._pt2 == other._pt1)
 
+    def __ne__(self, other: object) -> bool:
+        if not isinstance(other, Line2D):
+            return NotImplemented
+        return not self.__eq__(other)
+    def __hash__(self) -> int:
+        """Return a hash value for the line."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        return hash((self._pt1, self._pt2))
+    
     def set_line(self, x1: int | float, y1: int | float, x2: int | float, y2: int | float) -> Self:
         """Set the line using coordinates."""
         if not all(isinstance(coord, (int, float)) for coord in (x1, y1, x2, y2)):
@@ -223,9 +233,9 @@ class Line2D:
             raise TypeError("Unit vector must be a Line2D instance.")
         self._pt2 = Point2D(self._pt1.x + unit_vector.dx() * length, self._pt1.y + unit_vector.dy() * length)
         return self
-
+    """
     def angle(self) -> float:
-        """Calculate the angle of the line in radians."""
+        # Calculate the angle of the line in radians.
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
         #if self.dx() == 0:
@@ -233,14 +243,32 @@ class Line2D:
         angle_rad = atan2(-self.dy(), self.dx()) # -self.dy() to match the coordinate system where y increases upwards
         # Normalize angle to be in the range [0, 2*pi)
         return angle_rad if angle_rad >= 0 else angle_rad + 2 * pi
-    
+    """
+    def angle(self) -> float:
+        """
+        Calculate the angle of the line in radians.
+        Angles increase counterclockwise, with 0 corresponding to the positive x-axis.
+        Returns angle in the range [0, 2π).
+        """
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+            
+        # atan2 naturally gives angles increasing counterclockwise with 0 at positive x-axis
+        angle_rad = atan2(self.dy(), self.dx())
+        
+        # Normalize to [0, 2π)
+        if angle_rad < 0:
+            angle_rad += 2 * pi
+        return angle_rad
+
     def angle_deg(self) -> float:
         """Calculate the angle of the line in degrees."""
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
         return degrees(self.angle())
+    """
     def set_angle(self, angle: float) -> Self:
-        """Set the angle of the line in radians."""
+        # Set the angle of the line in radians.
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
         if not isinstance(angle, (int, float)):
@@ -251,7 +279,36 @@ class Line2D:
         angle_rad = radians(angle)
         self._pt2 = Point2D(self._pt1.x + length * cos(angle_rad), self._pt1.y - length * sin(angle_rad))
         return self
-    
+    """
+    def set_angle(self, angle: float) -> Self:
+        """
+        Set the angle of the line in radians or degrees.
+        
+        Angles increase counterclockwise, with 0 corresponding to the positive x-axis.
+        Preserves the line length.
+        
+        Args:
+            angle: The new angle in radians or degrees
+            
+        Returns:
+            Self for method chaining
+        """
+        if not isinstance(angle, (int, float)):
+            raise TypeError("Angle must be a numeric value.")
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        if self.length() == 0:
+            raise ValueError("Cannot set angle for a zero-length line.")
+        
+        # Convert angle to radians if needed
+        if isinstance(angle, int) or abs(angle) > 2*pi:
+            angle = radians(angle % 360)
+        
+        length = self.length()
+        self._pt2.x = self._pt1.x + length * cos(angle)
+        self._pt2.y = self._pt1.y + length * sin(angle)
+        return self
+        
     def angle_to_line(self, other: Self) -> tuple[float, bool]:
         """Calculate the angle between this line and another line in radians."""
         if not isinstance(other, Line2D):
@@ -261,10 +318,10 @@ class Line2D:
             raise ValueError("Start or end point is not defined for one of the lines.")
         angle_diff =  other.angle() - self.angle()
         if angle_diff > 0:
-            is_clockwise = True
+            is_clockwise = False
             #angle_diff += 2 * pi
         elif angle_diff <= 0:
-            is_clockwise = False
+            is_clockwise = True
             #angle_diff += 2 * pi
         return fabs(angle_diff), is_clockwise
 
@@ -311,8 +368,8 @@ class Line2D:
         self._pt2 = Point2D(self._pt1.x + dx, self._pt1.y + dy)
         return self
     
-    def swap_points(self) -> Self:
-        """Swap the start and end points of the line."""
+    def reverse(self) -> Self:
+        """Reverse the direction of the line."""
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
         self._pt1, self._pt2 = self._pt2, self._pt1
@@ -320,7 +377,11 @@ class Line2D:
     def is_valid(self) -> bool:
         """Check if the line is valid (both points are defined)."""
         return self._pt1 is not None and self._pt2 is not None
-    
+    def is_null(self) -> bool:
+        """Check if the line is null (both points are the same)."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        return self._pt1 == self._pt2
     def translate_pt(self, pt: Self) -> None:
         """Translate the line by a point."""
         if not isinstance(pt, Point2D):
@@ -339,11 +400,18 @@ class Line2D:
         self.translate_pt(Point2D(dx, dy))
     
     def rotate(self, angle: float) -> None:
-        """Rotate the line around its start point by a given angle in degrees."""
+        """
+        Rotate the line around its start point by a given angle in degrees.
+        Positive angles rotate counterclockwise.
+        Args:
+            angle: Rotation angle in degrees (counterclockwise)
+        """
         if not isinstance(angle, (int, float)):
             raise TypeError("Angle must be a numeric value.")
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
+        
+        # Convert to radians for counterclockwise rotation
         angle_rad = radians(angle)
         cos_angle = cos(angle_rad)
         sin_angle = sin(angle_rad)
@@ -352,7 +420,7 @@ class Line2D:
         translated_x = self.dx()
         translated_y = self.dy()
 
-        # Rotate around origin
+        # Rotate around origin (counterclockwise)
         rotated_x = translated_x * cos_angle - translated_y * sin_angle
         rotated_y = translated_x * sin_angle + translated_y * cos_angle
         
@@ -360,8 +428,8 @@ class Line2D:
         self._pt2.x = self._pt1.x + rotated_x
         self._pt2.y = self._pt1.y + rotated_y
     
-    def point_at(self, t: float) -> Point2D:
-        """Get a point on the line at parameter t (0 <= t <= 1)."""
+    def interpolate(self, t: float) -> Point2D:
+        """Interpolate a point on the line at parameter t (0 <= t <= 1)."""
         if not isinstance(t, (int, float)):
             raise TypeError("Parameter t must be a numeric value.")
         if not (0 <= t <= 1):
@@ -371,6 +439,19 @@ class Line2D:
         x = self._pt1.x + t * self.dx()
         y = self._pt1.y + t * self.dy()
         return Point2D(x, y)
+
+    def point_at_length(self, length: float) -> Point2D:
+        """Get a point on the line at a specific length from the start point."""
+        if not isinstance(length, (int, float)):
+            raise TypeError("Length must be a numeric value.")
+        if length < 0:
+            raise ValueError("Length cannot be negative.")
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        if self.length() == 0:
+            raise ValueError("Cannot get point at length for a zero-length line.")
+        unit_vector = self.unit_vector()
+        return Point2D(self._pt1.x + unit_vector.dx() * length, self._pt1.y + unit_vector.dy() * length)
     
     def distance_to_point(self, pt: Point2D) -> float:
         """Calculate the distance from a point to the line."""
@@ -409,11 +490,127 @@ class Line2D:
         if self._pt1 is None or self._pt2 is None or other._pt1 is None or other._pt2 is None:
             raise ValueError("Start or end point is not defined for one of the lines.")
         return fabs(self.slope() * other.slope() + 1) < 1e-9
+    
+    def coefficients(self) -> tuple[float, float, float]:
+        """Get the coefficients of the line in the form Ax + By + C = 0."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        A = self.dy()
+        B = -self.dx()
+        C = -(A * self._pt1.x + B * self._pt1.y)
+        return A, B, C
+    
+    def evaluate(self, *points: Point2D) -> int | float | None:
+        """Evaluate the line at a given x-coordinate."""
+        if not self.is_valid_line():
+            raise ValueError("Line is not valid (degenerate or points not defined).")
+        if len(points) == 0:
+            return None
+        elif len(points) == 1:
+            if not isinstance(points[0], Point2D):
+                raise TypeError("Argument must be a Point2D instance.")
+            a, b, c = self.coefficients()
+            return -(a * points[0].x + b * points[0].y + c) / b if b != 0 else None
+        elif len(points) == 2:
+            if not all(isinstance(pt, (int, float)) for pt in points):
+                    raise TypeError("Both arguments must be numeric.")
+            a, b, c = self.coefficients()
+            return -(a * points[0].x + b * points[0].y + c) / b if b != 0 else None
+        
+    def evaluate_y(self, x: int | float) -> int | float | None:
+        """Evaluate the line at a given x-coordinate."""
+        if not self.is_valid_line():
+            raise ValueError("Line is not valid (degenerate or points not defined).")
+        if not isinstance(x, (int, float)):
+            raise TypeError("Argument must be a numeric value.")
+        a, b, c = self.coefficients()
+        return -(a * x + c) / b if b != 0 else None
+
+    def evaluate_x(self, y: int | float) -> int | float | None:
+        """Evaluate the line at a given y-coordinate."""
+        if not self.is_valid_line():
+            raise ValueError("Line is not valid (degenerate or points not defined).")
+        if not isinstance(y, (int, float)):
+            raise TypeError("Argument must be a numeric value.")
+        a, b, c = self.coefficients()
+        return -(b * y + c) / a if a != 0 else None
+
+    def is_degenerate(self) -> bool:
+        """Check if the line is degenerate (both points are the same)."""
+        if self._pt1 is None or self._pt2 is None:
+            raise ValueError("Start or end point is not defined.")
+        a, b, c = self.coefficients()
+        return a == 0 and b == 0
+    
+    def is_valid_line(self) -> bool:
+        """Check if the line is valid (not degenerate and both points are defined)."""
+        if self._pt1 is None or self._pt2 is None:
+            return False
+        return not self.is_degenerate()
+    def intersection_with(self, other: Self) -> tuple[bool, Point2D]:
+        """Check if this line intersects with another line."""
+        if not isinstance(other, Line2D):
+            raise TypeError("Argument must be a Line2D instance.")
+        if self._pt1 is None or self._pt2 is None or other._pt1 is None or other._pt2 is None:
+            raise ValueError("Start or end point is not defined for one of the lines.")
+        if self.is_degenerate() or other.is_degenerate():
+            return False, Point2D(0, 0) # Degenerate lines cannot intersect meaningfully
+        # Check if the lines are parallel
+        if self.is_parallel(other):
+            return False, Point2D(0, 0) # Lines are parallel, no intersection
+        
+        # Calculate intersection point using line equations
+        A1, B1, C1 = self.coefficients()
+        A2, B2, C2 = other.coefficients()
+        
+        det = A1 * B2 - A2 * B1
+        if det == 0:
+            return False, Point2D(0, 0)  # Lines are parallel or coincident
+        x = (B1 * C2 - B2 * C1) / det
+        y = (A2 * C1 - A1 * C2) / det
+        return True, Point2D(x, y)
+    
+    def intersection_with_line(self, other: Self) -> tuple[bool, Point2D]:
+        """Check if this line intersects with another line segment."""
+        if not isinstance(other, Line2D):
+            raise TypeError("Argument must be a Line2D instance.")
+        if self.is_degenerate() or other.is_degenerate():
+            return 0, Point2D(0, 0) # Degenerate lines cannot intersect meaningfully
+        A = self._pt2 - self._pt1
+        B = other._pt1 - other._pt2
+        C =  self._pt1 - other._pt1
+        denominator = A.y * B.x - A.x * B.y
+        if denominator == 0 or fabs(denominator) < 1e-10:
+            # Lines are parallel or coincident
+            return 0, Point2D(0, 0) # No intersection
+        # Calculate intersection point using Cramer's rule
+        reciprocal_denominator = 1 / denominator
+        na = (B.y * C.x - B.x * C.y) * reciprocal_denominator
+        A *= na
+        inter_point = self._pt1 + A
+        if na < 0 or na > 1:
+            return 2, inter_point # Intersection point is outside the segment
+        nb = (A.x * C.y - A.y * C.x) * reciprocal_denominator
+        if nb < 0 or nb > 1:
+            return 2, Point2D(0, 0) # Intersection point is outside the segment
+        # If we reach here, the intersection point is within both segments
+        return 1, inter_point # Intersection point is within both segments
+       
 
     def __repr__(self) -> str:
         """Return a string representation of the line."""
-        return f"Line2D({self._pt1}, {self._pt2})"
-    
+        return f"Line2D(%s %s)" % (repr(self._pt1), repr(self._pt2))
+
     def __str__(self) -> str:
         """Return a user-friendly string representation of the line."""
-        return f"Line from {self._pt1} to {self._pt2}"
+        return f"(x1: %g, y1: %g, x2: %g, y2: %g)"\
+             % tuple(map(float, [self._pt1.x, self._pt1.y, self._pt2.x, self._pt2.y]))
+    def to_string(self) -> str:
+        """Return a string representation of the line."""
+        return "(" + self._pt1.to_string() + ", " + self._pt2.to_string() + ")"
+    def to_list(self) -> list[float]:
+        """Return the line as a list of coordinates."""
+        return [self._pt1.x, self._pt1.y, self._pt2.x, self._pt2.y]
+    def to_tuple(self) -> tuple[float, float, float, float]:
+        """Return the line as a tuple of coordinates."""
+        return (self._pt1.x, self._pt1.y, self._pt2.x, self._pt2.y)

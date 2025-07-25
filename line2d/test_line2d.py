@@ -183,12 +183,6 @@ class TestLine2D(unittest.TestCase):
         with self.assertRaises(ValueError):
             line.dy()
 
-    def test_repr(self):
-        pt1 = Point2D(1, 2)
-        pt2 = Point2D(3, 4)
-        line = Line2D(pt1, pt2)
-        self.assertEqual(repr(line), f"Line2D({pt1}, {pt2})")
-
     def test_length(self):
         line = Line2D(Point2D(0, 0), Point2D(3, 4))
         self.assertAlmostEqual(line.length(), 5.0)
@@ -213,32 +207,32 @@ class TestLine2D(unittest.TestCase):
         line = Line2D(Point2D(1, 0), Point2D(0, 0))
         self.assertAlmostEqual(line.angle_deg(), 180)
     
-    def test_angle_diagonal_315(self):
+    def test_angle_diagonal_45(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 1))
-        self.assertAlmostEqual(line.angle_deg(), 315)
+        self.assertAlmostEqual(line.angle_deg(), 45)
 
-    def test_angle_vertical_270(self):
+    def test_angle_vertical_90(self):
         line = Line2D(Point2D(0, 0), Point2D(0, 1))
-        self.assertAlmostEqual(line.angle_deg(), 270)
+        self.assertAlmostEqual(line.angle_deg(), 90)
 
     def test_angle_diagonal_225(self):
-        line = Line2D(Point2D(0, 0), Point2D(-1, 1))
-        self.assertAlmostEqual(line.angle_deg(), 225)
+        line = Line2D(Point2D(0, 0), Point2D(-1, 1)) #
+        self.assertAlmostEqual(line.angle_deg(), 135)
 
     def test_angle_horizontal_180(self):
         line = Line2D(Point2D(0, 0), Point2D(-1, 0))
         self.assertAlmostEqual(line.angle_deg(), 180)
 
     def test_angle_diagonal_135(self):
-        line = Line2D(Point2D(0, 0), Point2D(-1, -1))
-        self.assertAlmostEqual(line.angle_deg(), 135)    
+        line = Line2D(Point2D(0, 0), Point2D(-1, -1)) # 225
+        self.assertAlmostEqual(line.angle_deg(), 225)    
     def test_angle_vertical_90(self):
         line = Line2D(Point2D(0, 0), Point2D(0, -1))
-        self.assertAlmostEqual(line.angle_deg(), 90)
+        self.assertAlmostEqual(line.angle_deg(), 270)
 
     def test_angle_negative(self):
-        line = Line2D(Point2D(0, 0), Point2D(-1, -1))
-        self.assertAlmostEqual(line.angle_deg(), 135)
+        line = Line2D(Point2D(0, 0), Point2D(-1, -1)) #  225 degrees
+        self.assertAlmostEqual(line.angle_deg(), 225)
 
     def test_angle_raises_when_none(self):
         line = Line2D()
@@ -307,15 +301,20 @@ class TestLine2D(unittest.TestCase):
 
     def test_set_angle_vertical_up(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(270)
-        self.assertAlmostEqual(line.angle_deg(), 270)
-        self.assertAlmostEqual(line._pt2.x, 0.0)
-        self.assertAlmostEqual(line._pt2.y, 1.0)
-
-    def test_set_angle_vertical_down(self):
-        line = Line2D(Point2D(0, 0), Point2D(1, 0))
         line.set_angle(90)
         self.assertAlmostEqual(line.angle_deg(), 90)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, 1.0)
+    def test_set_angle_vertical_down(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(-90)
+        self.assertAlmostEqual(line.angle_deg(), 90)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, 1.0)
+    def test_set_angle_vertical_down(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(270)
+        self.assertAlmostEqual(line.angle_deg(), 270)
         self.assertAlmostEqual(line._pt2.x, 0.0)
         self.assertAlmostEqual(line._pt2.y, -1.0)
 
@@ -324,12 +323,18 @@ class TestLine2D(unittest.TestCase):
         line.set_angle(315)
         self.assertAlmostEqual(line.angle_deg(), 315)
         self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
-        self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
+        self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
         self.assertAlmostEqual(line.length(), 1.0)
     def test_set_angle_diagonal_minus45(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
         line.set_angle(-45)
         self.assertAlmostEqual(line.angle_deg(), 315)
+        self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
+        self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
+    def test_set_angle_diagonal_plus45(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.set_angle(45)
+        self.assertAlmostEqual(line.angle_deg(), 45)
         self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
         self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
         self.assertAlmostEqual(line.length(), 1.0)
@@ -338,14 +343,14 @@ class TestLine2D(unittest.TestCase):
         line.set_angle(225)
         self.assertAlmostEqual(line.angle_deg(), 225)
         self.assertAlmostEqual(line._pt2.x, -0.7071067811865474)
-        self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
+        self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
         self.assertAlmostEqual(line.length(), 1.0)
     def test_set_angle_diagonal_minus135(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
         line.set_angle(-135)
         self.assertAlmostEqual(line.angle_deg(), 225)
         self.assertAlmostEqual(line._pt2.x, -0.7071067811865474)
-        self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
+        self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
         self.assertAlmostEqual(line.length(), 1.0)
     def test_set_angle_non_numeric_raises(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
@@ -370,20 +375,20 @@ class TestLine2D(unittest.TestCase):
 
     def test_angle_to_line_horizontal_vs_vertical(self):
         line1 = Line2D(Point2D(0, 0), Point2D(1, 0))  # 0 deg
-        line2 = Line2D(Point2D(0, 0), Point2D(0, 1))  # 270 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(0, 1))  # 90 deg
         angle, is_clockwise = line1.angle_to_line(line2)
-        self.assertAlmostEqual(degrees(angle), 270)
-        self.assertTrue(is_clockwise)
+        self.assertAlmostEqual(degrees(angle), 90)
+        self.assertFalse(is_clockwise)
 
     def test_angle_to_line_vertical_vs_horizontal(self):
-        line1 = Line2D(Point2D(0, 0), Point2D(0, 1))  # 270 deg
+        line1 = Line2D(Point2D(0, 0), Point2D(0, 1))  # 90 deg
         line2 = Line2D(Point2D(0, 0), Point2D(1, 0))  # 0 deg
         angle, is_clockwise = line1.angle_to_line(line2)
-        self.assertAlmostEqual(degrees(angle), 270)
-        self.assertFalse(is_clockwise)
+        self.assertAlmostEqual(degrees(angle), 90)
+        self.assertTrue(is_clockwise)
     def test_angle_to_line_from_315_to_225(self):
-        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))  # 315 deg
-        line2 = Line2D(Point2D(0, 0), Point2D(-1, 1)) # 225 deg
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))  # 45 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(-1, 1)) # 135 deg
         angle, is_clockwise = line1.angle_to_line(line2)
         self.assertAlmostEqual(degrees(angle), 90)
         self.assertFalse(is_clockwise)
@@ -407,25 +412,25 @@ class TestLine2D(unittest.TestCase):
         self.assertTrue(is_clockwise)
 
     def test_angle_to_line_same_direction(self):
-        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line2 = Line2D(Point2D(0, 0), Point2D(2, 0))
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0)) # 0 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(2, 0)) # 0 deg
         angle, is_clockwise = line1.angle_to_line(line2)
         self.assertAlmostEqual(angle, 0)
-        self.assertFalse(is_clockwise)
+        self.assertTrue(is_clockwise)
 
     def test_angle_to_line_opposite_direction(self):
-        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line2 = Line2D(Point2D(0, 0), Point2D(-1, 0))
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0)) # 0 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(-1, 0)) # 180 deg
         angle, is_clockwise = line1.angle_to_line(line2)
         self.assertAlmostEqual(degrees(angle), 180)
-        self.assertTrue(is_clockwise)
+        self.assertFalse(is_clockwise)
 
     def test_angle_to_line_diagonal(self):
         line1 = Line2D(Point2D(0, 0), Point2D(1, 0))  # 0 deg
-        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))  # 315 deg
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))  # 45 deg
         angle, is_clockwise = line1.angle_to_line(line2)
-        self.assertAlmostEqual(degrees(angle), 315)
-        self.assertTrue(is_clockwise)
+        self.assertAlmostEqual(degrees(angle), 45)
+        self.assertFalse(is_clockwise)
 
     def test_angle_to_line_type_error(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
@@ -639,7 +644,12 @@ class TestLine2D(unittest.TestCase):
         self.assertAlmostEqual(line._pt2.x, 0.0)
         self.assertAlmostEqual(line._pt2.y, 1.0)
         self.assertAlmostEqual(line.length(), 1.0)
-
+    def test_rotate_horizontal_minus90(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line.rotate(-90)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, -1.0)
+        self.assertAlmostEqual(line.length(), 1.0)
     def test_rotate_horizontal_180(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
         line.rotate(180)
@@ -667,21 +677,26 @@ class TestLine2D(unittest.TestCase):
         self.assertAlmostEqual(line._pt2.x, -1.0)
         self.assertAlmostEqual(line._pt2.y, 0.0)
         self.assertAlmostEqual(line.length(), 1.0)
-
-    def test_rotate_diagonal_45(self):
-        line = Line2D(Point2D(0, 0), Point2D(1, 1))
-        line.rotate(45)
-        self.assertAlmostEqual(line._pt2.x, 0)
-        self.assertAlmostEqual(line._pt2.y, 1.4142135623730951)
-        self.assertAlmostEqual(line.length(), sqrt(2))
-
+    
     def test_rotate_negative_angle(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
         line.rotate(-90)
-        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.x, 0)
         self.assertAlmostEqual(line._pt2.y, -1.0)
         self.assertAlmostEqual(line.length(), 1.0)
-
+    def test_rotate_diagonal_45(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line.rotate(45)
+        self.assertAlmostEqual(line._pt2.x, 0.0)
+        self.assertAlmostEqual(line._pt2.y, 1.41421356237309510)
+        self.assertAlmostEqual(line.length(), sqrt(2))
+    def test_rotate_diagonal_minus45(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line.rotate(-45)
+        self.assertAlmostEqual(line._pt2.x, 1.41421356237309510)
+        self.assertAlmostEqual(line._pt2.y, 0.0)
+        self.assertAlmostEqual(line.length(), sqrt(2))
+    
     def test_rotate_non_numeric_angle_raises(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
         with self.assertRaises(TypeError):
@@ -696,6 +711,51 @@ class TestLine2D(unittest.TestCase):
         line._pt2 = None
         with self.assertRaises(ValueError):
             line.rotate(90)
+
+    def test_evaluate_no_args_returns_none(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        self.assertIsNone(line.evaluate())
+
+    def test_evaluate_one_point_on_line(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        pt = Point2D(2, 2)
+        # For y = x, coefficients are a=1, b=-1, c=0
+        # -(1*2 + (-1)*2 + 0)/-1 = -(2-2)/-1 = 0/-1 = 0.0
+        self.assertAlmostEqual(line.evaluate(pt), 0.0)
+
+    def test_evaluate_one_point_off_line(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 0))
+        pt = Point2D(2, 3)
+        # For y=0, coefficients a=0, b=-1, c=0
+        # -(0*2 + (-1)*3 + 0)/-1 = -(-3)/-1 = 3/-1 = -3.0
+        self.assertAlmostEqual(line.evaluate(pt), -3.0)
+
+    def test_evaluate_two_points(self):
+        line = Line2D(Point2D(0, 0), Point2D(0, 1))
+        print(line.coefficients())
+        x = 1
+        y = 2
+        #pt2 = Point2D(3, 4)
+        # For vertical line x=0, coefficients a=1, b=0, c=0
+        # b==0, so should return None
+        self.assertIsNone(line.evaluate(x, y))
+
+    def test_evaluate_non_point_arg_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.evaluate("not a point")
+        with self.assertRaises(TypeError):
+            line.evaluate(Point2D(1, 2), "not a point")
+
+    def test_evaluate_none_points_raises(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line._pt1 = None
+        with self.assertRaises(ValueError):
+            line.evaluate(Point2D(1, 2))
+        line._pt1 = Point2D(0, 0)
+        line._pt2 = None
+        with self.assertRaises(ValueError):
+            line.evaluate(Point2D(1, 2))
 
     
 

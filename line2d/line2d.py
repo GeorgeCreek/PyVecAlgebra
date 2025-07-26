@@ -33,120 +33,117 @@ class Line2D:
             self._pt2 = Point2D(x2, y2)
         else:
             raise ValueError("Too many points provided.")
-    def get_sp(self) -> Point2D:
+    
+    @property
+    def sp(self) -> Point2D:
         """Get the start point of the line."""
-        if self._pt1 is None:
-            raise ValueError("Start point is not defined.")
         if not isinstance(self._pt1, Point2D):
             raise TypeError("Start point must be a Point2D instance.")
         return self._pt1
-    
-    def set_sp(self, pt: Point2D) -> None:
+    @sp.setter
+    def sp(self, point):
         """Set the start point of the line."""
-        if self._pt1 is None:
-            self._pt1 = Point2D()
-        if not isinstance(pt, Point2D):
-            raise TypeError("Start point must be a Point2D instance.")
-        self._pt1 = pt
-    sp = property(get_sp, set_sp, doc="Start point of the line.")
-   
-    def get_ep(self) -> Point2D:
+        if isinstance(point, Point2D):
+            self._pt1 = point
+        elif isinstance(point, (tuple | list)) and len(point) == 2:
+            if not all(isinstance(coord, (int, float)) for coord in point):
+                raise TypeError("Coordinates must be numeric values.")
+            self._pt1 = Point2D(point[0], point[1])
+        else:
+            raise TypeError("Start point must be a Point2D instance or a tuple/list of two coordinates.")
+    
+    @property
+    def ep(self) -> Point2D:
         """Get the end point of the line."""
-        if self._pt2 is None:
-            raise ValueError("End point is not defined.")
         if not isinstance(self._pt2, Point2D):
             raise TypeError("End point must be a Point2D instance.")
         return self._pt2
-    def set_ep(self, pt: Point2D) -> None:
+    @ep.setter
+    def ep(self, point):
         """Set the end point of the line."""
-        if self._pt2 is None:
-            self._pt2 = Point2D()
-        if not isinstance(pt, Point2D):
-            raise TypeError("End point must be a Point2D instance.")
-        self._pt2 = pt
-    ep = property(get_ep, set_ep, doc="End point of the line.")
-    def get_points(self) -> tuple[Point2D, Point2D]:
+        if isinstance(point, Point2D):
+            self._pt2 = point
+        elif isinstance(point, (tuple | list)) and len(point) == 2:
+            if not all(isinstance(coord, (int, float)) for coord in point):
+                raise TypeError("Coordinates must be numeric values.")
+            self._pt2 = Point2D(point[0], point[1])
+        else:
+            raise TypeError("End point must be a Point2D instance or a tuple/list of two coordinates.")
+    @property
+    def points(self) -> tuple[Point2D, Point2D]:
         """Get the start and end points of the line."""
-        if self._pt1 is None or self._pt2 is None:
-            raise ValueError("Start or end point is not defined.")
-        return self._pt1, self._pt2
-
-    def set_points(self, pt1: Point2D, pt2: Point2D) -> None:
-        """Set the start and end points of the line."""
-        if not isinstance(pt1, Point2D) or not isinstance(pt2, Point2D):
+        if not all(isinstance(pt, Point2D) for pt in (self._pt1, self._pt2)):
             raise TypeError("Both points must be Point2D instances.")
-        self._pt1 = pt1
-        self._pt2 = pt2
-    # points = property(get_points, set_points, doc="Start and end points of the line.")
-    def get_sp_x(self) -> int | float | None:
-        """Get the x-coordinate of the start point."""
-        if self._pt1 is None:
-            raise ValueError("Start point is not defined.")
-        if not isinstance(self._pt1, Point2D):
-            return None
-        return self._pt1.x
+        return self._pt1, self._pt2
     
-    def set_sp_x(self, x: int | float) -> None:
+    @points.setter
+    def points(self, pts: tuple[Point2D, Point2D]) -> None:
+        """Set the start and end points of the line."""
+        if not isinstance(pts, tuple) or len(pts) != 2:
+            raise TypeError("Points must be a tuple of two Point2D instances.")
+        if not all(isinstance(pt, Point2D) for pt in pts):
+            raise TypeError("Both points must be Point2D instances.")
+        self._pt1 = pts[0]
+        self._pt2 = pts[1]
+    
+    @property
+    def sp_x(self) -> int | float:
+        """Get the x-coordinate of the start point."""
+        if not isinstance(self._pt1, Point2D):
+            raise TypeError("Start point must be a Point2D instance.")
+        return self._pt1.x
+    @sp_x.setter
+    def sp_x(self, x: int | float) -> None:
         """Set the x-coordinate of the start point."""
-        if self._pt1 is None:
-            self._pt1 = Point2D()
+        if not isinstance(x, (int, float)):
+            raise TypeError("X-coordinate must be a numeric value.")
         if not isinstance(self._pt1, Point2D):
             raise TypeError("Start point must be a Point2D instance.")
         self._pt1.x = x
-    
-    def get_sp_y(self) -> int | float | None:
+    @property
+    def sp_y(self) -> int | float:
         """Get the y-coordinate of the start point."""
-        if self._pt1 is None:
-            raise ValueError("Start point is not defined.")
         if not isinstance(self._pt1, Point2D):
-            return None
+            raise TypeError("Start point must be a Point2D instance.")
         return self._pt1.y
-    
-    def set_sp_y(self, y: int | float) -> None:
+    @sp_y.setter
+    def sp_y(self, y: int | float) -> None:
         """Set the y-coordinate of the start point."""
-        if self._pt1 is None:
-            self._pt1 = Point2D()
+        if not isinstance(y, (int, float)):
+            raise TypeError("Y-coordinate must be a numeric value.")
         if not isinstance(self._pt1, Point2D):
             raise TypeError("Start point must be a Point2D instance.")
         self._pt1.y = y
-
-    def get_ep_x(self) -> int | float | None:
+    @property
+    def ep_x(self) -> int | float | None:
         """Get the x-coordinate of the end point."""
-        if self._pt2 is None:
-            raise ValueError("End point is not defined.")
-        if not isinstance(self._pt2, Point2D):
-            return None
-        return self._pt2.x
-    
-    def set_ep_x(self, x: int | float) -> None:
-        """Set the x-coordinate of the end point."""
-        if self._pt2 is None:
-            self._pt2 = Point2D()
         if not isinstance(self._pt2, Point2D):
             raise TypeError("End point must be a Point2D instance.")
+        return self._pt2.x
+    @ep_x.setter
+    def ep_x(self, x: int | float) -> None:
+        """Set the x-coordinate of the end point."""
+        if not isinstance(x, (int, float)):
+            raise TypeError("X-coordinate must be a numeric value.")
+        if not isinstance(self._pt2, Point2D):
+            self._pt2 = Point2D()
         self._pt2.x = x
 
-    def get_ep_y(self) -> int | float | None:
+    @property
+    def ep_y(self) -> int | float | None:
         """Get the y-coordinate of the end point."""
-        if self._pt2 is None:
-            raise ValueError("End point is not defined.")
-        if not isinstance(self._pt2, Point2D):
-            return None
-        return self._pt2.y
-    
-    def set_ep_y(self, y: int | float) -> None:
-        """Set the y-coordinate of the end point."""
-        if self._pt2 is None:
-            self._pt2 = Point2D()
         if not isinstance(self._pt2, Point2D):
             raise TypeError("End point must be a Point2D instance.")
+        return self._pt2.y
+    @ep_y.setter
+    def ep_y(self, y: int | float) -> None:
+        """Set the y-coordinate of the end point."""
+        if not isinstance(y, (int, float)):
+            raise TypeError("Y-coordinate must be a numeric value.")
+        if not isinstance(self._pt2, Point2D):
+            self._pt2 = Point2D()
         self._pt2.y = y
-    
-    sp_x = property(get_sp_x, set_sp_x, doc="X-coordinate of the start point.")
-    sp_y = property(get_sp_y, set_sp_y, doc="Y-coordinate of the start point.")
-    ep_x = property(get_ep_x, set_ep_x, doc="X-coordinate of the end point.")
-    ep_y = property(get_ep_y, set_ep_y, doc="Y-coordinate of the end point.")
-    
+
     def __eq__(self, other: Self) -> bool:
         if not isinstance(other, Line2D):
             return NotImplemented
@@ -267,7 +264,6 @@ class Line2D:
             
         # atan2 naturally gives angles increasing counterclockwise with 0 at positive x-axis
         angle_rad = atan2(self.dy(), self.dx())
-        
         # Normalize to [0, 2π)
         if angle_rad < 0:
             angle_rad += 2 * pi
@@ -283,7 +279,7 @@ class Line2D:
    
     def set_angle(self, angle: float) -> Self:
         """
-        Set the angle of the line in radians or degrees.
+        Set the angle of the line in radians.
         
         Angles increase counterclockwise, with 0 corresponding to the positive x-axis.
         Preserves the line length.
@@ -300,18 +296,26 @@ class Line2D:
             raise ValueError("Start or end point is not defined.")
         if self.length() == 0:
             raise ValueError("Cannot set angle for a zero-length line.")
-        
+        if angle < 0:
+            angle += 2 * pi
+        elif angle >= 2 * pi:
+            angle -= 2 * pi
         # Convert angle to radians
+        length = self.length()
+        self._pt2.x = self._pt1.x + length * cos(angle)
+        self._pt2.y = self._pt1.y + length * sin(angle)
+        return self
+
+    def set_angle_deg(self, angle: float) -> Self:
+        """Set the angle of the line in degrees."""
+        if not isinstance(angle, (int, float)):
+            raise TypeError("Angle must be a numeric value.")
         if angle < 0:
             angle += 360
         elif angle >= 360:
             angle -= 360
-        angle_rad = radians(angle)
-        length = self.length()
-        self._pt2.x = self._pt1.x + length * cos(angle_rad)
-        self._pt2.y = self._pt1.y + length * sin(angle_rad)
-        return self
-        
+        return self.set_angle(radians(angle))
+
     def angle_to_line(self, other: Self) -> tuple[float, bool]:
         """Calculate the angle between this line and another line in radians."""
         if not isinstance(other, Line2D):
@@ -350,7 +354,7 @@ class Line2D:
             raise ValueError("Start or end point is not defined.")
         return self.length(), self.angle_deg()
     
-    def set_polar_coordinates(self, length: float, angle: float) -> Self:
+    def set_polar_(self, length: float, angle: float) -> Self:
         """Set the polar coordinates of the line."""
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
@@ -358,10 +362,21 @@ class Line2D:
             raise TypeError("Length and angle must be numeric values.")
         if length < 0:
             raise ValueError("Length cannot be negative.")
-        angle_rad = radians(angle)
-        self._pt2 = Point2D(self._pt1.x + length * cos(angle_rad), self._pt1.y - length * sin(angle_rad))
+        self._pt2 = Point2D(self._pt1.x + length * cos(angle), self._pt1.y + length * sin(angle))
         return self
-    
+        
+    def set_polar_deg(self, length: float, angle: float) -> Self:
+        """Set the line using polar coordinates (degrees)."""
+        if not isinstance(pt1, Point2D) or not isinstance(pt2, Point2D):
+            raise TypeError("Points must be Point2D instances.")
+        if not isinstance(length, (int, float)) or not isinstance(angle, (int, float)):
+            raise TypeError("Length and angle must be numeric values.")
+        if length < 0:
+            raise ValueError("Length cannot be negative.")
+        angle_rad = radians(angle)
+        self.set_polar_(length, angle_rad)
+        return self
+
     def set_cartesian_coordinates(self, x: int | float, y: int | float) -> Self:
         """Set the line using Cartesian coordinates."""
         if not all(isinstance(coord, (int, float)) for coord in (x, y)):

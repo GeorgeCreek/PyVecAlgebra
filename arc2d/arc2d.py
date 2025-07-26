@@ -1,7 +1,7 @@
 from point2d.point2d import Point2D
 from line2d.line2d import Line2D
 from typing import Self, Union, Tuple, Optional
-
+from math import pi, cos, sin, atan2, degrees, sqrt
 class Arc2D:
     def __init__(self, *points):
         """
@@ -36,7 +36,43 @@ class Arc2D:
                 raise TypeError("Points must be Point2D instances, lists, or tuples.")
         else:
             raise ValueError("Arc2D requires exactly three points (start, center and end points on the arc).")
-    
+    def is_null(self) -> bool:
+        """
+        Checks if the arc is null (all points are at the origin).
+        Returns:
+            bool: True if the arc is null, False otherwise.
+        """
+        return self._pt1 == self._pt2
+    def is_zero(self) -> bool:
+        """
+        Checks if the arc is zero (all points are at the origin).
+        Returns:
+            bool: True if the arc is zero, False otherwise.
+        """
+        return self._pt0 == Point2D(0, 0) and self._pt1 == Point2D(0, 0) and self._pt2 == Point2D(0, 0)
+    def is_valid(self) -> bool:
+        """
+        Checks if the arc is valid (the start and end points are not the same).
+        Returns:
+            bool: True if the arc is valid, False otherwise.
+        """
+        return not self.is_null() and not self.is_zero()
+    def is_clockwise(self) -> bool:
+        """
+        Checks if the arc is clockwise.
+        Returns:
+            bool: True if the arc is clockwise, False otherwise.
+        """
+        angle, is_clockwise = self.segment_cp_sp().angle_to_line(self.segment_cp_ep())
+        return is_clockwise
+    def is_counter_clockwise(self) -> bool:
+        """
+        Checks if the arc is counter-clockwise.
+        Returns:
+            bool: True if the arc is counter-clockwise, False otherwise.
+        """
+        return not self.is_clockwise()
+
     @property
     def sp(self):
         """Start point of the arc."""
@@ -91,15 +127,16 @@ class Arc2D:
             self._pt2 = Point2D(point[0], point[1])
         else:
             raise TypeError("End point must be a Point2D instance or a tuple/list of two coordinates.")
-
-    def get_points(self) -> Tuple[Point2D, Point2D, Point2D]:
+    @property
+    def points(self) -> Tuple[Point2D, Point2D, Point2D]:
         """
         Returns the start, center, and end points of the arc as a tuple.
         Returns:
             Tuple[Point2D, Point2D, Point2D]: The start, center, and end points.
         """
         return self._pt0, self._pt1, self._pt2
-    def set_points(self, pt0: Point2D, pt1: Point2D, pt2: Point2D) -> None:
+    @points.setter
+    def points(self, points) -> None:
         """
         Sets the start, center, and end points of the arc.
         Parameters:
@@ -110,11 +147,23 @@ class Arc2D:
         Raises:
             TypeError: If any of the points are not Point2D instances.
         """
-        if not all(isinstance(pt, Point2D) for pt in (pt0, pt1, pt2)):
-            raise TypeError("All points must be Point2D instances.")
-        self._pt0 = pt0
-        self._pt1 = pt1
-        self._pt2 = pt2
+        if len(points) == 0:
+            self._pt0 = Point2D(0, 0)
+            self._pt1 = Point2D(0, 0)
+            self._pt2 = Point2D(0, 0)
+        elif len(points) == 3:
+            if all(isinstance(pt, Point2D) for pt in points):
+                self._pt0, self._pt1, self._pt2 = points[0], points[1], points[2]
+            elif all(isinstance(pt, (list, tuple)) for pt in points):
+                if all(isinstance(coord, (int, float)) for pt in points for coord in pt):
+                    self._pt0 = Point2D(points[0][0], points[0][1])
+                    self._pt1 = Point2D(points[1][0], points[1][1])
+                    self._pt2 = Point2D(points[2][0], points[2][1])
+                else:
+                    raise TypeError("Coordinates must be numeric values.")
+        else:
+            raise ValueError("Arc2D requires exactly three points (start, center and end points on the arc).")
+    
     def segment_cp_sp(self) -> Line2D:
         """
         Returns the line segment from the center point to the start point.
@@ -217,7 +266,7 @@ class Arc2D:
             float: The angle in radians.
         """
         return self.angle_cp_ep()
-        
+
     def distance_sp_ep(self) -> float:
         """
         Returns the distance between the start point and the end point.
@@ -226,8 +275,106 @@ class Arc2D:
         """
         return self.segment_sp_ep().length()
 
-    
-    
+    def arc_length(self) -> float:
+        """
+        Returns the length of the arc.
+        Returns:
+            float: The length of the arc.
+        """
+        radius = self.radius_cp_sp()
+        angle, is_clockwise = self.segment_cp_sp().angle_to_line(self.segment_cp_ep())
+        return radius * angle
+
+    def arc_angle(self) -> float:
+        """
+        Returns the angle of the arc.
+        Returns:
+            float: The angle of the arc in radians.
+        """
+        angle, is_clockwise = self.segment_cp_sp().angle_to_line(self.segment_cp_ep())
+        if angle < 0:
+            angle += 2 * pi
+        elif angle >= 2 * pi:
+            angle -= 2 * pi
+        return angle
+
+    def arc_angle_deg(self) -> float:
+        """
+        Returns the angle of the arc in degrees.
+        Returns:
+            float: The angle of the arc in degrees.
+        """
+        return degrees(self.arc_angle())
+    def point_at_angle(self, angle: float) -> Point2D:
+        """
+        Returns the point on the arc at a specific angle.
+        Parameters:
+            angle (float): The angle in radians.
+        Returns:
+            Point2D: The point on the arc at the specified angle.
+        """
+        if not (self.start_angle() <= angle <= self.end_angle()):
+            raise ValueError("Angle is outside the arc's range.")
+        x = self.cp.x + self.radius_cp_sp() * cos(angle)
+        y = self.cp.y + self.radius_cp_sp() * sin(angle)
+        return Point2D(x, y)
+    def point_at_angle_deg(self, angle: float) -> Point2D:
+        """
+        Returns the point on the arc at a specific angle in degrees.
+        Parameters:
+            angle (float): The angle in degrees.
+        Returns:
+            Point2D: The point on the arc at the specified angle.
+        """
+        angle_rad = radians(angle)
+        return self.point_at_angle(angle_rad)
+    def point_at_midpoint(self) -> Point2D:
+        """
+        Returns the midpoint of the arc.
+        Returns:
+            Point2D: The midpoint of the arc.
+        """
+        angle, is_clockwise = self.segment_cp_sp().angle_to_line(self.segment_cp_ep())
+        mid_angle = angle / 2
+        return self.point_at_angle(mid_angle)
+    def get_middle_point(self) -> Point2D:
+        """
+        Returns the middle point of the arc.
+        Returns:
+            Point2D: The middle point of the arc.
+        """
+        segment = self.segment_cp_sp()
+        if segment.is_null():
+            return self.cp
+        line.set_polar(segment.length(), segment.angle() + self.arc_angle() / 2)
+        return line.ep()
+
+    def set_arc_angle(self, angle: float) -> None:
+        """
+        Sets the angle of the arc in radians.
+        Parameters:
+            angle (float): The new angle in radians.
+        """
+        if not isinstance(angle, (int, float)):
+            raise TypeError("Angle must be a numeric value.")
+        if angle < 0:
+            angle += 2 * pi
+        elif angle >= 2 * pi:
+            angle -= 2 * pi
+        arc_angle = self.angle_cp_sp() + angle
+        self._pt2 = self.point_at_angle(arc_angle)
+
+    def set_arc_angle_deg(self, angle: float) -> None:
+        """
+        Sets the angle of the arc in degrees.
+        Parameters:
+            angle (float): The new angle in degrees.
+        """
+        if not isinstance(angle, (int, float)):
+            raise TypeError("Angle must be a numeric value.")
+        angle_rad = radians(angle)
+        self.set_arc_angle(angle_rad)
+
     def __repr__(self) -> str:
         return f"Arc2D(start={self.sp}, center={self.cp}, end={self.ep})"
     def length(self) -> float:

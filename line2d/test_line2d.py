@@ -55,118 +55,7 @@ class TestLine2D(unittest.TestCase):
         self.assertTrue(l1 == l3)
         self.assertFalse(l1 == l4)
 
-    def test_get_points(self):
-        pt1 = Point2D(10, 20)
-        pt2 = Point2D(30, 40)
-        line = Line2D(pt1, pt2)
-        points = line.get_points()
-        self.assertEqual(points, (pt1, pt2))
-
-    def test_get_points_raises_when_none(self):
-        line = Line2D()
-        # Manually set to None to simulate error condition
-        line._pt1 = None
-        with self.assertRaises(ValueError):
-            line.get_points()
-        line._pt1 = Point2D()
-        line._pt2 = None
-        with self.assertRaises(ValueError):
-            line.get_points()
-
-    def test_set_points_valid(self):
-        line = Line2D()
-        pt1 = Point2D(1, 1)
-        pt2 = Point2D(2, 2)
-        line.set_points(pt1, pt2)
-        self.assertEqual(line._pt1, pt1)
-        self.assertEqual(line._pt2, pt2)
-
-    def test_set_points_invalid(self):
-        line = Line2D()
-        with self.assertRaises(TypeError):
-            line.set_points("not a point", Point2D(1, 2))
-        with self.assertRaises(TypeError):
-            line.set_points(Point2D(1, 2), 123)
-
-    def test_sp_x_property(self):
-        line = Line2D(Point2D(1, 2), Point2D(3, 4))
-        self.assertEqual(line.sp_x, 1)
-        line.sp_x = 10
-        self.assertEqual(line.sp_x, 10)
-        self.assertEqual(line._pt1.x, 10)
-
-    def test_sp_x_setter_creates_point_if_none(self):
-        line = Line2D()
-        line._pt1 = None
-        line.sp_x = 5
-        self.assertIsInstance(line._pt1, Point2D)
-        self.assertEqual(line.sp_x, 5)
-
-    def test_sp_x_getter_raises_if_none(self):
-        line = Line2D()
-        line._pt1 = None
-        with self.assertRaises(ValueError):
-            _ = line.sp_x
-
-    def test_sp_y_property(self):
-        line = Line2D(Point2D(1, 2), Point2D(3, 4))
-        self.assertEqual(line.sp_y, 2)
-        line.sp_y = 20
-        self.assertEqual(line.sp_y, 20)
-        self.assertEqual(line._pt1.y, 20)
-
-    def test_sp_y_setter_creates_point_if_none(self):
-        line = Line2D()
-        line._pt1 = None
-        line.sp_y = 15
-        self.assertIsInstance(line._pt1, Point2D)
-        self.assertEqual(line.sp_y, 15)
-
-    def test_sp_y_getter_raises_if_none(self):
-        line = Line2D()
-        line._pt1 = None
-        with self.assertRaises(ValueError):
-            _ = line.sp_y
-
-    def test_ep_x_property(self):
-        line = Line2D(Point2D(1, 2), Point2D(3, 4))
-        self.assertEqual(line.ep_x, 3)
-        line.ep_x = 30
-        self.assertEqual(line.ep_x, 30)
-        self.assertEqual(line._pt2.x, 30)
-
-    def test_ep_x_setter_creates_point_if_none(self):
-        line = Line2D()
-        line._pt2 = None
-        line.ep_x = 25
-        self.assertIsInstance(line._pt2, Point2D)
-        self.assertEqual(line.ep_x, 25)
-
-    def test_ep_x_getter_raises_if_none(self):
-        line = Line2D()
-        line._pt2 = None
-        with self.assertRaises(ValueError):
-            _ = line.ep_x
-
-    def test_ep_y_property(self):
-        line = Line2D(Point2D(1, 2), Point2D(3, 4))
-        self.assertEqual(line.ep_y, 4)
-        line.ep_y = 40
-        self.assertEqual(line.ep_y, 40)
-        self.assertEqual(line._pt2.y, 40)
-
-    def test_ep_y_setter_creates_point_if_none(self):
-        line = Line2D()
-        line._pt2 = None
-        line.ep_y = 35
-        self.assertIsInstance(line._pt2, Point2D)
-        self.assertEqual(line.ep_y, 35)
-
-    def test_ep_y_getter_raises_if_none(self):
-        line = Line2D()
-        line._pt2 = None
-        with self.assertRaises(ValueError):
-            _ = line.ep_y
+    
 
     def test_dx_and_dy(self):
         line = Line2D(Point2D(1, 2), Point2D(4, 6))
@@ -294,60 +183,60 @@ class TestLine2D(unittest.TestCase):
 
     def test_set_angle_horizontal(self):
         line = Line2D(Point2D(0, 0), Point2D(0, 1))
-        line.set_angle(0)
+        line.set_angle_deg(0)
         self.assertAlmostEqual(line.angle_deg(), 0.0)
         self.assertAlmostEqual(line._pt2.x, 1.0)
         self.assertAlmostEqual(line._pt2.y, 0.0)
 
     def test_set_angle_vertical_up(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(90)
+        line.set_angle_deg(90)
         self.assertAlmostEqual(line.angle_deg(), 90)
         self.assertAlmostEqual(line._pt2.x, 0.0)
         self.assertAlmostEqual(line._pt2.y, 1.0)
     def test_set_angle_vertical_down(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(-90)
+        line.set_angle_deg(-90)
         self.assertAlmostEqual(line.angle_deg(), 90)
         self.assertAlmostEqual(line._pt2.x, 0.0)
         self.assertAlmostEqual(line._pt2.y, 1.0)
     def test_set_angle_vertical_down(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(270)
+        line.set_angle_deg(270)
         self.assertAlmostEqual(line.angle_deg(), 270)
         self.assertAlmostEqual(line._pt2.x, 0.0)
         self.assertAlmostEqual(line._pt2.y, -1.0)
 
     def test_set_angle_diagonal_315(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(315)
+        line.set_angle_deg(315)
         self.assertAlmostEqual(line.angle_deg(), 315)
         self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
         self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
         self.assertAlmostEqual(line.length(), 1.0)
     def test_set_angle_diagonal_minus45(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(-45)
+        line.set_angle_deg(-45)
         self.assertAlmostEqual(line.angle_deg(), 315)
         self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
         self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
     def test_set_angle_diagonal_plus45(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(45)
+        line.set_angle_deg(45)
         self.assertAlmostEqual(line.angle_deg(), 45)
         self.assertAlmostEqual(line._pt2.x, 0.7071067811865474)
         self.assertAlmostEqual(line._pt2.y, 0.7071067811865477)
         self.assertAlmostEqual(line.length(), 1.0)
     def test_set_angle_diagonal_225(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(225)
+        line.set_angle_deg(225)
         self.assertAlmostEqual(line.angle_deg(), 225)
         self.assertAlmostEqual(line._pt2.x, -0.7071067811865474)
         self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
         self.assertAlmostEqual(line.length(), 1.0)
     def test_set_angle_diagonal_minus135(self):
         line = Line2D(Point2D(0, 0), Point2D(1, 0))
-        line.set_angle(-135)
+        line.set_angle_deg(-135)
         self.assertAlmostEqual(line.angle_deg(), 225)
         self.assertAlmostEqual(line._pt2.x, -0.7071067811865474)
         self.assertAlmostEqual(line._pt2.y, -0.7071067811865477)
@@ -901,6 +790,70 @@ class TestLine2D(unittest.TestCase):
         line2._pt2 = None
         with self.assertRaises(ValueError):
             line1.intersection_with_line(line2)
+
+    def test_sp_x_getter_and_setter(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        self.assertEqual(line.sp_x, 1)
+        line.sp_x = 10
+        self.assertEqual(line._pt1.x, 10)
+        self.assertEqual(line.sp_x, 10)
+
+    def test_sp_x_setter_type_error(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        with self.assertRaises(TypeError):
+            line.sp_x = "not a number"
+        line._pt1 = None
+        with self.assertRaises(TypeError):
+            line.sp_x = 5
+
+    def test_sp_y_getter_and_setter(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        self.assertEqual(line.sp_y, 2)
+        line.sp_y = 20
+        self.assertEqual(line._pt1.y, 20)
+        self.assertEqual(line.sp_y, 20)
+
+    def test_sp_y_setter_type_error(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        with self.assertRaises(TypeError):
+            line.sp_y = "not a number"
+        line._pt1 = None
+        with self.assertRaises(TypeError):
+            line.sp_y = 5
+
+    def test_ep_x_getter_and_setter(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        self.assertEqual(line.ep_x, 3)
+        line.ep_x = 30
+        self.assertEqual(line._pt2.x, 30)
+        self.assertEqual(line.ep_x, 30)
+
+    def test_ep_x_setter_type_error(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        with self.assertRaises(TypeError):
+            line.ep_x = "not a number"
+        line._pt2 = None
+        # Should create a new Point2D if _pt2 is not a Point2D
+        line.ep_x = 7
+        self.assertIsInstance(line._pt2, Point2D)
+        self.assertEqual(line._pt2.x, 7)
+
+    def test_ep_y_getter_and_setter(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        self.assertEqual(line.ep_y, 4)
+        line.ep_y = 40
+        self.assertEqual(line._pt2.y, 40)
+        self.assertEqual(line.ep_y, 40)
+
+    def test_ep_y_setter_type_error(self):
+        line = Line2D(Point2D(1, 2), Point2D(3, 4))
+        with self.assertRaises(TypeError):
+            line.ep_y = "not a number"
+        line._pt2 = None
+        # Should create a new Point2D if _pt2 is not a Point2D
+        line.ep_y = 8
+        self.assertIsInstance(line._pt2, Point2D)
+        self.assertEqual(line._pt2.y, 8)
 
   
     

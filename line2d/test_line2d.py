@@ -757,9 +757,152 @@ class TestLine2D(unittest.TestCase):
         with self.assertRaises(ValueError):
             line.evaluate(Point2D(1, 2))
 
-    
+    def test_intersection_with_parallel_lines(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(0, 1), Point2D(1, 2))
+        result, pt = line1.intersection_with(line2)
+        self.assertFalse(result)
+        self.assertEqual(pt, Point2D(0, 0))
 
-    
+    def test_intersection_with_coincident_lines(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        result, pt = line1.intersection_with(line2)
+        self.assertFalse(result)
+        self.assertEqual(pt, Point2D(0, 0))
+
+    def test_intersection_with_degenerate_line(self):
+        pt = Point2D(1, 1)
+        line1 = Line2D(pt, pt)
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        result, pt_out = line1.intersection_with(line2)
+        self.assertFalse(result)
+        self.assertEqual(pt_out, Point2D(0, 0))
+
+    def test_intersection_with_non_intersecting_lines(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line2 = Line2D(Point2D(0, 1), Point2D(1, 1))
+        result, pt = line1.intersection_with(line2)
+        self.assertFalse(result)
+        self.assertEqual(pt, Point2D(0, 0))
+
+    def test_intersection_with_intersecting_lines(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line2 = Line2D(Point2D(0.5, -1), Point2D(0.5, 1))
+        result, pt = line1.intersection_with(line2)
+        self.assertTrue(result)
+        self.assertAlmostEqual(pt.x, 0.5)
+        self.assertAlmostEqual(pt.y, 0.0)
+
+    def test_intersection_with_intersecting_diagonal(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(2, 2))
+        line2 = Line2D(Point2D(0, 2), Point2D(2, 0))
+        result, pt = line1.intersection_with(line2)
+        self.assertTrue(result)
+        self.assertAlmostEqual(pt.x, 1.0)
+        self.assertAlmostEqual(pt.y, 1.0)
+
+    def test_intersection_with_type_error(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.intersection_with("not a line")
+
+    def test_intersection_with_none_points_raises(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line1._pt1 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with(line2)
+        line1._pt1 = Point2D(0, 0)
+        line1._pt2 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with(line2)
+        line1._pt2 = Point2D(1, 1)
+        line2._pt1 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with(line2)
+        line2._pt1 = Point2D(0, 0)
+        line2._pt2 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with(line2)
+
+    def test_intersection_with_line_parallel(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(0, 1), Point2D(1, 2))
+        result, pt = line1.intersection_with_line(line2)
+        self.assertEqual(result, 0)
+        self.assertEqual(pt, Point2D(0, 0))
+
+    def test_intersection_with_line_coincident(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        result, pt = line1.intersection_with_line(line2)
+        self.assertEqual(result, 0)
+        self.assertEqual(pt, Point2D(0, 0))
+
+    def test_intersection_with_line_degenerate(self):
+        pt = Point2D(1, 1)
+        line1 = Line2D(pt, pt)
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        result, pt_out = line1.intersection_with_line(line2)
+        self.assertEqual(result, 0)
+        self.assertEqual(pt_out, Point2D(0, 0))
+
+    def test_intersection_with_line_no_intersection(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 0))
+        line2 = Line2D(Point2D(0, 1), Point2D(1, 1))
+        result, pt = line1.intersection_with_line(line2)
+        self.assertEqual(result, 0)
+        self.assertEqual(pt, Point2D(0, 0))
+
+    def test_intersection_with_line_segments_intersect(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(2, 2))
+        line2 = Line2D(Point2D(0, 2), Point2D(2, 0))
+        result, pt = line1.intersection_with_line(line2)
+        self.assertEqual(result, 1)
+        self.assertAlmostEqual(pt.x, 1.0)
+        self.assertAlmostEqual(pt.y, 1.0)
+
+    def test_intersection_with_line_segments_intersect_outside(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(2, 2), Point2D(3, 3))
+        result, pt = line1.intersection_with_line(line2)
+        self.assertEqual(result, 0)
+        # Intersection point is outside both segments, but should be collinear
+        self.assertIsInstance(pt, Point2D)
+
+    def test_intersection_with_line_segments_intersect_at_endpoint(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(1, 1), Point2D(2, 0))
+        result, pt = line1.intersection_with_line(line2)
+        self.assertEqual(result, 1)
+        self.assertEqual(pt, Point2D(1, 1))
+
+    def test_intersection_with_line_type_error(self):
+        line = Line2D(Point2D(0, 0), Point2D(1, 1))
+        with self.assertRaises(TypeError):
+            line.intersection_with_line("not a line")
+
+    def test_intersection_with_line_none_points_raises(self):
+        line1 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line2 = Line2D(Point2D(0, 0), Point2D(1, 1))
+        line1._pt1 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with_line(line2)
+        line1._pt1 = Point2D(0, 0)
+        line1._pt2 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with_line(line2)
+        line1._pt2 = Point2D(1, 1)
+        line2._pt1 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with_line(line2)
+        line2._pt1 = Point2D(0, 0)
+        line2._pt2 = None
+        with self.assertRaises(ValueError):
+            line1.intersection_with_line(line2)
+
+  
     
 if __name__ == "__main__":
     unittest.main()

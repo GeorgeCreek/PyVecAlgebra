@@ -1,6 +1,7 @@
 import unittest
 from math import sqrt, pi
 # from point2d.point2d import Point2D
+
 from point2d import Point2D
 
 import copy

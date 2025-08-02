@@ -1,6 +1,8 @@
 import unittest
-from arc2d.arc2d import Arc2D
+from .arc2d import Arc2D
 from point2d.point2d import Point2D
+from math import sqrt, isclose, radians
+
 
 class TestArc2D(unittest.TestCase):
     def setUp(self):
@@ -151,6 +153,41 @@ class TestArc2D(unittest.TestCase):
         arc = Arc2D(Point2D(1, 2), Point2D(3, 4), Point2D(5, 6))
         arc.points = ()
         self.assertEqual(arc.points, (Point2D(0, 0), Point2D(0, 0), Point2D(0, 0)))
+    def test_points_setter_with_three_point2d(self):
+        arc = Arc2D()
+        pts = (Point2D(7, 8), Point2D(9, 10), Point2D(11, 12))
+        arc.points = pts
+        self.assertEqual(arc.points, pts)
+    def test_points_setter_with_three_lists(self):
+        arc = Arc2D()
+        new_points = ([1, 2], [3, 4], [5, 6])
+        arc.points = new_points
+        self.assertEqual(arc.points, (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6)))
+    def test_points_setter_with_three_tuples(self):
+        arc = Arc2D()
+        pts = ((1, 2), (3, 4), (5, 6))
+        arc.points = pts
+        self.assertEqual(arc.points, (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6)))   
+    def test_points_setter_with_wrong_number_of_points(self):
+        arc = Arc2D()
+        with self.assertRaises(ValueError):
+            arc.points = (Point2D(1, 2), Point2D(3, 4))
+        with self.assertRaises(ValueError):
+            arc.points = (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6), Point2D(7, 8))
+    def test_points_setter_with_mixed_types(self):
+        arc = Arc2D()
+        pts = ((1, 2), [3, 4], (5, 6))
+        arc.points = pts
+        self.assertEqual(arc.points, (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6)))
+    def test_points_setter_with_non_numeric_coordinates(self):
+        arc = Arc2D()
+        with self.assertRaises(TypeError):
+            arc.points = ([1, "a"], [3, 4], [5, 6])
+
+    def test_points_setter_with_invalid_type(self):
+        arc = Arc2D()
+        with self.assertRaises(ValueError):
+            arc.points = "not a tuple"
 
     def test_arc_length_and_arc_angle(self):
         # Create an arc with center at (0,0), start at (1,0), end at (0,1)
@@ -189,54 +226,205 @@ class TestArc2D(unittest.TestCase):
         self.assertAlmostEqual(angle, 1.57079632679, places=5)
         length = arc.arc_length()
         self.assertAlmostEqual(length, 1.57079632679, places=5)
-    """
-    def test_points_setter_with_three_point2d(self):
-        arc = Arc2D()
-        pts = (Point2D(7, 8), Point2D(9, 10), Point2D(11, 12))
-        arc.points = pts
-        self.assertEqual(arc.points, pts)
 
-    def test_points_setter_with_three_lists(self):
-        arc = Arc2D()
-        new_points = ([1, 2], [3, 4], [5, 6])
-        self.arc.points = new_points
-        print(arc.points)
-        self.assertEqual(arc.points, (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6)))
-        arc = Arc2D()
-        pts = ([1, 2], [3, 4], [5, 6])
-        arc.points = pts
-        self.assertEqual(arc.points, (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6)))
-    """
-    """
-    def test_points_setter_with_three_tuples(self):
-        arc = Arc2D()
-        pts = ((1, 2), (3, 4), (5, 6))
-        arc.points = pts
-        self.assertEqual(arc.points, (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6)))
+    def test_create_from_sp_mp_ep_valid_arc(self):
+        # Points on a quarter circle, center at (0,0), start at (1,0), mid at (sqrt(2)/2, sqrt(2)/2), end at (0,1)
+        start = Point2D(1, 0)
+        mid = Point2D(sqrt(2)/2, sqrt(2)/2)
+        end = Point2D(0, 1)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        self.assertTrue(ok)
+        self.assertIsInstance(arc, Arc2D)
+        # The center should be close to (0,0)
+        self.assertTrue(isclose(arc.cp.x, 0, abs_tol=1e-9))
+        self.assertTrue(isclose(arc.cp.y, 0, abs_tol=1e-9))
+        # The start and end points should match
+        self.assertEqual(arc.sp, start)
+        self.assertEqual(arc.ep, end)
 
-    def test_points_setter_with_wrong_number_of_points(self):
-        arc = Arc2D()
-        with self.assertRaises(ValueError):
-            arc.points = (Point2D(1, 2), Point2D(3, 4))
-        with self.assertRaises(ValueError):
-            arc.points = (Point2D(1, 2), Point2D(3, 4), Point2D(5, 6), Point2D(7, 8))
+    def test_create_from_sp_mp_ep_colinear_points(self):
+        # Colinear points should return (False, None)
+        start = Point2D(0, 0)
+        mid = Point2D(1, 1)
+        end = Point2D(2, 2)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        self.assertFalse(ok)
+        self.assertIsNone(arc)
 
-    def test_points_setter_with_mixed_types(self):
-        arc = Arc2D()
-        with self.assertRaises(TypeError):
-            arc.points = (Point2D(1, 2), [3, 4], (5, 6))
+    def test_create_from_sp_mp_ep_duplicate_points(self):
+        # Duplicate points should raise ValueError
+        start = Point2D(1, 2)
+        mid = Point2D(1, 2)
+        end = Point2D(3, 4)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        self.assertFalse(ok)
+        self.assertIsNone(arc)
 
-    def test_points_setter_with_non_numeric_coordinates(self):
-        arc = Arc2D()
-        with self.assertRaises(TypeError):
-            arc.points = ([1, "a"], [3, 4], [5, 6])
+    def test_create_from_sp_mp_ep_points_too_close(self):
+        # Points that are very close together should return (False, None)
+        start = Point2D(0, 0)
+        mid = Point2D(1e-10, 0)
+        end = Point2D(1, 0)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        self.assertFalse(ok)
+        self.assertIsNone(arc)
 
-    def test_points_setter_with_invalid_type(self):
-        arc = Arc2D()
-        with self.assertRaises(ValueError):
-            arc.points = "not a tuple"
-    """
+    def test_create_from_sp_mp_ep_center_too_close_to_start_or_end(self):
+        # Construct points such that the computed center is extremely close to start or end
+        # For a degenerate arc, e.g., all points on a tiny circle
+        eps = 1e-10
+        start = Point2D(1, 0)
+        mid = Point2D(0, 1)
+        end = Point2D(-1 + eps, 0)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        # The center will be close to (0,0), but end is almost at (-1,0), so should still be valid
+        self.assertTrue(ok)
+        self.assertIsInstance(arc, Arc2D)
+        # Now, make end coincide with center
+        end = Point2D(0, 0)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        print(ok, arc)
+        # This should return False since start and end are the same
+        self.assertTrue(ok)
+        self.assertIsInstance(arc, Arc2D)
+    ##################################################################
+    def test_create_from_p1_p2_p3_valid(self):
+        # Create an arc from three points
+        start = Point2D(0, 0)
+        mid = Point2D(1, 1)
+        end = Point2D(2, 0)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        self.assertTrue(ok)
+        # Check if the arc is created correctly
+        self.assertIsInstance(arc, Arc2D)
+        self.assertEqual(arc.sp, start)
+        self.assertEqual(arc.cp, Point2D(1, 0))
+        self.assertEqual(arc.ep, end)
+    def test_create_from_p1_p2_p3_colinear(self):
+        # Create an arc from three colinear points
+        start = Point2D(0, 0)
+        mid = Point2D(1, 1)
+        end = Point2D(2, 2)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        self.assertFalse(ok)
+        self.assertIsNone(arc)
+    def test_create_from_p1_p2_p3_duplicate(self):
+        # Create an arc from three points where start and end are the same
+        start = Point2D(0, 0)
+        mid = Point2D(1, 1)
+        end = Point2D(0, 0)
+        ok, arc = Arc2D.create_from_sp_mp_ep(start, mid, end)
+        self.assertFalse(ok)
+        self.assertIsNone(arc)
+    ##################################################
+    def test_create_from_sp_ep_rd_cw(self):
+        start_pt = Point2D(0, 0)
+        end_pt = Point2D(4, 0)
+        radius = 3
+        cw = True
+        success, arc = Arc2D.create_from_sp_ep_rd_cw(start_pt, end_pt, radius, cw)
+        self.assertTrue(success)
+        self.assertEqual(arc.sp, start_pt)
+        self.assertEqual(arc.ep, end_pt)
+        self.assertAlmostEqual(arc.radius_cp_sp(), radius)
+        # Check if the center is correctly calculated
+        if cw:
+            expected_center = Point2D(2, -2.23606797749979)
+        else:
+            expected_center = Point2D(2, 2.23606797749979)
+        self.assertAlmostEqual(arc.cp.x, expected_center.x)
+        self.assertAlmostEqual(arc.cp.y, expected_center.y)
+    def test_create_from_sp_ep_rd_cw(self):
+        start_pt = Point2D(4, 0)
+        end_pt = Point2D(0, 0)
+        radius = 3
+        cw = True
+        success, arc = Arc2D.create_from_sp_ep_rd_cw(start_pt, end_pt, radius, cw)
+        self.assertTrue(success)
+        self.assertEqual(arc.sp, start_pt)
+        self.assertEqual(arc.ep, end_pt)
+        self.assertAlmostEqual(arc.radius_cp_sp(), radius)
+        # Check if the center is correctly calculated
+        if cw:
+            expected_center = Point2D(2, 2.23606797749979)
+        else:
+            expected_center = Point2D(2, -2.23606797749979)
+        self.assertAlmostEqual(arc.cp.x, expected_center.x)
+        self.assertAlmostEqual(arc.cp.y, expected_center.y)
+    def test_create_from_sp_ep_rd_cw_invalid_radius(self):
+        start_pt = Point2D(0, 0)
+        end_pt = Point2D(4, 0)
+        radius = 1 # Too small for the given points
+        cw = False
+        success, arc = Arc2D.create_from_sp_ep_rd_cw(start_pt, end_pt, radius, cw)
+        self.assertFalse(success)
+        self.assertIsNone(arc)
+    def test_create_from_sp_ep_rd_cw_invalid_points(self):
+        start_pt = Point2D(0, 0)
+        end_pt = Point2D(0, 0)
+        radius = 3
+        cw = False
+        success, arc = Arc2D.create_from_sp_ep_rd_cw(start_pt, end_pt, radius, cw)
+        self.assertFalse(success)
+        self.assertIsNone(arc)
+    def test_create_from_sp_ep_rd_cw_colinear(self):
+        start_pt = Point2D(0, 0)
+        mid_pt = Point2D(2, 2)
+        end_pt = Point2D(4, 4)
+        radius = 3
+        cw = False
+        success, arc = Arc2D.create_from_sp_ep_rd_cw(start_pt, end_pt, radius, cw)
+        self.assertFalse(success)
+        self.assertIsNone(arc)
+    def test_create_from_sp_ep_rd_cw_negative_radius(self):
+        start_pt = Point2D(0, 0)
+        end_pt = Point2D(4, 0)
+        radius = -3
+        cw = False
+        success, arc = Arc2D.create_from_sp_ep_rd_cw(start_pt, end_pt, radius, cw)
+        self.assertFalse(success)
+        self.assertIsNone(arc)
 
+    def test_create_from_sp_ep_aa(self):
+        start_pt = Point2D(1, 0)
+        end_pt = Point2D(0, 1)
+        cw = False
+        angle = radians(90)
+        success, arc = Arc2D.create_from_sp_ep_aa(start_pt, end_pt, angle, cw)
+        self.assertTrue(success)
+        self.assertEqual(arc.sp, start_pt)
+        self.assertEqual(arc.ep, end_pt)
+        # Check if the center is correctly calculated
+        expected_center = Point2D(0.0, 0.0)
+        self.assertAlmostEqual(arc.cp.x, expected_center.x)
+        self.assertAlmostEqual(arc.cp.y, expected_center.y)
+
+        start_pt = Point2D(1, 0)
+        end_pt = Point2D(0, 1)
+        cw = True
+        angle = radians(270)
+        success, arc = Arc2D.create_from_sp_ep_aa(start_pt, end_pt, angle, cw)
+        self.assertTrue(success)
+        self.assertEqual(arc.sp, start_pt)
+        self.assertEqual(arc.ep, end_pt)
+        # Check if the center is correctly calculated
+        expected_center = Point2D(1.0, 1.0)
+        self.assertAlmostEqual(arc.cp.x, expected_center.x)
+        self.assertAlmostEqual(arc.cp.y, expected_center.y)
+
+    def test_create_from_cp_sp_aa_cw(self):
+        center_pt = Point2D(0, 0)
+        start_pt = Point2D(1, 0)
+        angle = radians(90)
+        cw = False
+        success, arc = Arc2D.create_from_cp_sp_aa_cw(center_pt, start_pt, angle, cw)
+        self.assertTrue(success)
+        self.assertEqual(arc.cp, center_pt)
+        self.assertEqual(arc.sp, start_pt)
+        # Check if the end point is correctly calculated
+        expected_end = Point2D(0, 1)
+        self.assertAlmostEqual(arc.ep.x, expected_end.x)
+        self.assertAlmostEqual(arc.ep.y, expected_end.y)
 if __name__ == "__main__":
     unittest.main()
     

@@ -348,16 +348,18 @@ class Line2D:
             raise ValueError("Start or end point is not defined.")
         return self.dy() == 0
     
-    def get_polar_coordinates(self) -> tuple[float, float]:
+    def get_polar(self) -> tuple[float, float]:
         """Get the polar coordinates of the line."""
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
         return self.length(), self.angle_deg()
     
-    def set_polar_(self, length: float, angle: float) -> Self:
+    def set_polar(self, length: float, angle: float) -> Self:
         """Set the polar coordinates of the line."""
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
+        if not isinstance(self._pt1, Point2D) or not isinstance(self._pt2, Point2D):
+            raise TypeError("Points must be Point2D instances.")
         if not isinstance(length, (int, float)) or not isinstance(angle, (int, float)):
             raise TypeError("Length and angle must be numeric values.")
         if length < 0:
@@ -367,17 +369,15 @@ class Line2D:
         
     def set_polar_deg(self, length: float, angle: float) -> Self:
         """Set the line using polar coordinates (degrees)."""
-        if not isinstance(pt1, Point2D) or not isinstance(pt2, Point2D):
-            raise TypeError("Points must be Point2D instances.")
         if not isinstance(length, (int, float)) or not isinstance(angle, (int, float)):
             raise TypeError("Length and angle must be numeric values.")
         if length < 0:
             raise ValueError("Length cannot be negative.")
         angle_rad = radians(angle)
-        self.set_polar_(length, angle_rad)
+        self.set_polar(length, angle_rad)
         return self
 
-    def set_cartesian_coordinates(self, x: int | float, y: int | float) -> Self:
+    def set_cartesian_xy(self, x: int | float, y: int | float) -> Self:
         """Set the line using Cartesian coordinates."""
         if not all(isinstance(coord, (int, float)) for coord in (x, y)):
             raise TypeError("Coordinates must be numeric values.")
@@ -395,11 +395,18 @@ class Line2D:
     def is_valid(self) -> bool:
         """Check if the line is valid (both points are defined)."""
         return self._pt1 is not None and self._pt2 is not None
+    def is_none(self) -> bool:
+        """Check if the line is none (both points are the same)."""
+        """Check if the line is none (both points are not defined)."""
+        if not isinstance(self._pt1, Point2D) or not isinstance(self._pt2, Point2D):
+            raise TypeError("Points must be Point2D instances.")
+        return self._pt1 is None or self._pt2 is None
     def is_null(self) -> bool:
-        """Check if the line is null (both points are the same)."""
+        """Check if the line is zero-length (both points are the same)."""
         if self._pt1 is None or self._pt2 is None:
             raise ValueError("Start or end point is not defined.")
-        return self._pt1 == self._pt2
+        return self._pt1.x == self._pt2.x and self._pt1.y == self._pt2.y
+
     def translate_pt(self, pt: Self) -> None:
         """Translate the line by a point."""
         if not isinstance(pt, Point2D):

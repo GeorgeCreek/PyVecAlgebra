@@ -291,7 +291,7 @@ class Point2D:
         if not isinstance(other, Point2D):
             raise TypeError("Argument must be of type Point2D")
         return sqrt(self.distance_to_squared(other))
-    def angle_to_rad(self, other: Self) -> float:
+    def angle_to(self, other: Self) -> float:
         """
         Calculate the angle in radians from this point to another Point2D.
         :param other: Another Point2D instance.

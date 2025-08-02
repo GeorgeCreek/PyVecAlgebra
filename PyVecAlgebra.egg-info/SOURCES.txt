@@ -1,0 +1,16 @@
+README.md
+setup.py
+PyVecAlgebra.egg-info/PKG-INFO
+PyVecAlgebra.egg-info/SOURCES.txt
+PyVecAlgebra.egg-info/dependency_links.txt
+PyVecAlgebra.egg-info/top_level.txt
+arc2d/__init__.py
+arc2d/arc2d.py
+arc2d/test_arc2d.py
+line2d/__init__.py
+line2d/line2d.py
+line2d/test_line2d.py
+line2d/version.py
+point2d/__init__.py
+point2d/point2d.py
+point2d/test_point2d.py
